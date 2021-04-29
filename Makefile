@@ -4,7 +4,10 @@ LOCAL_ARG = --local --verbose --diagnostics
 endif
 
 test:
-	./node_modules/.bin/mocha
+	TS_NODE_PROJECT=test/tsconfig.json ./node_modules/.bin/mocha
+
+test-watch:
+	TS_NODE_PROJECT=test/tsconfig.json ./node_modules/.bin/mocha --watch
 
 build:
 	./node_modules/.bin/tsc -p tsconfig.json

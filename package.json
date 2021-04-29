@@ -1,25 +1,25 @@
 {
-  "name": "@well-known-components/base-component",
+  "name": "@dcl/peer-islands",
   "version": "1.0.0",
-  "description": "base component",
+  "description": "Library to group peers in islands using their location so they can connect more efficiently",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/well-known-components/base-component.git"
+    "url": "git+https://github.com/decentraland/peer-islands"
   },
   "keywords": [],
   "author": "",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/well-known-components/base-component/issues"
+    "url": "https://github.com/decentraland/peer-islands/issues"
   },
   "prettier": {
     "printWidth": 120,
     "semi": false
   },
-  "homepage": "https://github.com/well-known-components/base-component#readme",
+  "homepage": "https://github.com/decentraland/peer-islands#readme",
   "devDependencies": {
     "@microsoft/api-extractor": "^7.12.1",
     "@types/mocha": "^8.2.2",
@@ -29,7 +29,10 @@
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@types/uuid": "^8.3.0",
+    "uuid": "^8.3.2"
+  },
   "peerDependencies": {
     "@well-known-components/interfaces": "^1.1.0"
   },
