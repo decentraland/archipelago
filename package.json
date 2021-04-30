@@ -1,5 +1,5 @@
 {
-  "name": "@dcl/peer-islands",
+  "name": "@dcl/archipelago",
   "version": "1.0.0",
   "description": "Library to group peers in islands using their location so they can connect more efficiently",
   "main": "dist/index.js",
