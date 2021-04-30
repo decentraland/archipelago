@@ -1,7 +1,2 @@
-/**
- * A function that does something
- * @public
- */
-export function example(){
-  return true
-}
+export * from "./interfaces"
+export { defaultArchipelago } from "./Archipelago"
