@@ -38,6 +38,12 @@ describe("archipelago", () => {
     )
   }
 
+  function expectIslandsWith(...islandIds: string[][]) {
+    islandIds.forEach((ids) => expectIslandWith(...ids))
+
+    expect(archipelago.getIslands().length).toEqual(islandIds.length)
+  }
+
   it("joins two close peers in island", () => {
     setPositions(["1", 0, 0, 0], ["2", 16, 0, 16])
 
@@ -51,16 +57,14 @@ describe("archipelago", () => {
     const islands = archipelago.getIslands()
 
     expect(islands.length).toEqual(2)
-    expectIslandWith("1", "2")
-    expectIslandWith("3")
+    expectIslandsWith(["1", "2"], ["3"])
   })
 
   it("joins two existing islands when a peer 'bridges' them", () => {
     setPositions(["1", 0, 0, 0], ["2", 16, 0, 16], ["3", 100, 0, 0])
 
     expect(archipelago.getIslands().length).toEqual(2)
-    expectIslandWith("1", "2")
-    expectIslandWith("3")
+    expectIslandsWith(["1", "2"], ["3"])
 
     setPositions(["4", 50, 0, 0])
 
@@ -75,8 +79,7 @@ describe("archipelago", () => {
 
     setPositions(["3", 100, 0, 0])
 
-    expectIslandWith("1", "2")
-    expectIslandWith("3")
+    expectIslandsWith(["1", "2"], ["3"])
   })
 
   it("splits islands when a group of peers leaves", () => {
@@ -85,9 +88,26 @@ describe("archipelago", () => {
 
     setPositions(["3", 100, 0, 0], ["4", 95, 0, 0])
 
-    console.log(JSON.stringify(archipelago))
+    expectIslandsWith(["1", "2"], ["3", "4"])
+  })
 
-    expectIslandWith("1", "2")
-    expectIslandWith("3", "4")
+  it("respects join & leave radiuses for stability", () => {
+    setPositions(["1", 0, 0, 0], ["2", 16, 0, 16], ["3", 50, 0, 0], ["4", 45, 0, 0])
+    expectIslandWith("1", "2", "3", "4")
+
+    setPositions(["5", -100, 0, 0], ["6", -105, 0, 0])
+
+    expectIslandsWith(["1", "2", "3", "4"], ["5", "6"])
+
+    setPositions(["5", -50, 0, 0])
+
+    expectIslandWith("1", "2", "3", "4","5","6")
+    
+    setPositions(["5", -70, 0, 0])
+    expectIslandWith("1", "2", "3", "4","5","6")
+
+    setPositions(["5", -85, 0, 0])
+
+    expectIslandsWith(["1", "2", "3", "4"], ["5", "6"])
   })
 })
