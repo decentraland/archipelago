@@ -32,6 +32,8 @@ class ArchipelagoImpl implements Archipelago {
     if (!(id in this.peers)) {
       this.peers[id] = { id, position }
       this.createIsland([this.peers[id]])
+    } else {
+      this.peers[id].position = position
     }
     this.updateIslands()
   }
