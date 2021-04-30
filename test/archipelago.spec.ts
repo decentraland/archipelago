@@ -64,8 +64,6 @@ describe("archipelago", () => {
 
     setPositions(["4", 50, 0, 0])
 
-    console.log(JSON.stringify(archipelago.getIslands()))
-
     expect(archipelago.getIslands().length).toEqual(1)
 
     expectIslandWith("1", "2", "3", "4")
