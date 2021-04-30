@@ -101,13 +101,26 @@ describe("archipelago", () => {
 
     setPositions(["5", -50, 0, 0])
 
-    expectIslandWith("1", "2", "3", "4","5","6")
-    
+    expectIslandWith("1", "2", "3", "4", "5", "6")
+
     setPositions(["5", -70, 0, 0])
-    expectIslandWith("1", "2", "3", "4","5","6")
+    expectIslandWith("1", "2", "3", "4", "5", "6")
 
     setPositions(["5", -85, 0, 0])
 
     expectIslandsWith(["1", "2", "3", "4"], ["5", "6"])
+  })
+
+  it("keeps biggest island id when splitting", () => {
+    setPositions(["1", 0, 0, 0], ["2", 16, 0, 16], ["3", 50, 0, 0], ["4", 45, 0, 0])
+    const islandId = archipelago.getIslands()[0].id
+
+    setPositions(["3", 150, 0, 0])
+
+    const island = archipelago.getIsland(islandId)
+
+    expect(island.peers.map((it) => it.id).sort()).toEqual(["1", "2", "4"])
+
+    expectIslandWith("3")
   })
 })

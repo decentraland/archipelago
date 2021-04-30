@@ -144,6 +144,10 @@ class ArchipelagoImpl implements Archipelago {
   getIslands(): Island[] {
     return Object.values(this.islands)
   }
+
+  getIsland(id: string): Island | undefined {
+    return this.islands[id]
+  }
 }
 
 export function defaultArchipelago(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>): Archipelago {
