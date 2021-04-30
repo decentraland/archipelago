@@ -55,8 +55,6 @@ class ArchipelagoImpl implements Archipelago {
         this.intersectIslands(this.islands[islandId], it, this.options.joinDistance)
       )
 
-      console.log(islandsIntersected)
-
       if (islandsIntersected.length > 0) {
         const merged = this.mergeIslands(this.islands[islandId], ...islandsIntersected)
         islandsIntersected.forEach((it) => processedIslands.delete(it.id))
@@ -100,8 +98,6 @@ class ArchipelagoImpl implements Archipelago {
 
   mergeIslands(...islands: Island[]) {
     let biggestIndex = 0
-
-    console.log(JSON.stringify(islands))
 
     for (let i = 1; i < islands.length; i++) {
       if (islands[i].peers.length > islands[biggestIndex].peers.length) {
