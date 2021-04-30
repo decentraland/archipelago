@@ -68,4 +68,26 @@ describe("archipelago", () => {
 
     expectIslandWith("1", "2", "3", "4")
   })
+
+  it("splits islands when a peer leaves", () => {
+    setPositions(["1", 0, 0, 0], ["2", 16, 0, 16], ["3", 50, 0, 0])
+    expectIslandWith("1", "2", "3")
+
+    setPositions(["3", 100, 0, 0])
+
+    expectIslandWith("1", "2")
+    expectIslandWith("3")
+  })
+
+  it("splits islands when a group of peers leaves", () => {
+    setPositions(["1", 0, 0, 0], ["2", 16, 0, 16], ["3", 50, 0, 0], ["4", 45, 0, 0])
+    expectIslandWith("1", "2", "3", "4")
+
+    setPositions(["3", 100, 0, 0], ["4", 95, 0, 0])
+
+    console.log(JSON.stringify(archipelago))
+
+    expectIslandWith("1", "2")
+    expectIslandWith("3", "4")
+  })
 })

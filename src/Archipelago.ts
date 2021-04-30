@@ -81,7 +81,7 @@ class ArchipelagoImpl implements Archipelago {
 
         for (const group of rest) {
           // We remove each group
-          peerGroups.splice(peerGroups.indexOf(group), 0)
+          peerGroups.splice(peerGroups.indexOf(group), 1)
 
           //We add the members of each group to the final group
           finalGroup.push(...group)
