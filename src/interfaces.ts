@@ -3,6 +3,7 @@ export type Position3D = [number, number, number]
 export type PeerData = {
   id: string
   position: Position3D
+  islandId?: string
 }
 
 export type Island = {
@@ -15,6 +16,7 @@ export interface Archipelago {
   setPeerPosition(id: string, position: Position3D): void
   getIslands(): Island[]
   getIsland(id: string): Island | undefined
+  clearPeer(id: string): void
 }
 
 export type ArchipelagoOptions = {

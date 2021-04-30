@@ -123,4 +123,14 @@ describe("archipelago", () => {
 
     expectIslandWith("3")
   })
+
+  it("can clear a peer", () => {
+    setPositions(["1", 0, 0, 0], ["2", 16, 0, 16], ["4", 50, 0, 0], ["3", 100, 0, 0])
+
+    expectIslandsWith(["1", "2", "3", "4"])
+
+    archipelago.clearPeer("4")
+
+    expectIslandsWith(["1", "2"], ["3"])
+  })
 })

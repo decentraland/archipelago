@@ -38,6 +38,24 @@ class ArchipelagoImpl implements Archipelago {
     this.updateIslands()
   }
 
+  clearPeer(id: string): void {
+    const peer = this.peers.get(id)
+    if (peer) {
+      this.peers.delete(id)
+      if (peer.islandId) {
+        this.clearPeerFromIsland(id, this.islands.get(peer.islandId)!)
+      }
+      this.updateIslands()
+    }
+  }
+
+  clearPeerFromIsland(id: string, island: Island) {
+    const idx = island.peers.findIndex((it) => it.id === id)
+    if (idx > 0) {
+      island.peers.splice(idx, 1)
+    }
+  }
+
   updateIslands(): void {
     this.checkSplitIslands()
     this.checkMergeIslands()
@@ -111,7 +129,8 @@ class ArchipelagoImpl implements Archipelago {
 
     while (islands.length > 0) {
       const anIsland = islands.shift()!
-      biggest.peers.push(...anIsland.peers)
+      
+      this.addPeersToIsland(biggest, anIsland.peers)
 
       this.islands.delete(anIsland.id)
     }
@@ -131,6 +150,13 @@ class ArchipelagoImpl implements Archipelago {
     return this.options.distanceFunction(aPeer.position, otherPeer.position) <= intersectDistance
   }
 
+  addPeersToIsland(island: Island, peers: PeerData[]) {
+    island.peers.push(...peers)
+    for (const peer of peers) {
+      peer.islandId = island.id
+    }
+  }
+
   createIsland(group: PeerData[]) {
     const newIslandId = v4()
 
@@ -139,6 +165,10 @@ class ArchipelagoImpl implements Archipelago {
       peers: group,
       maxPeers: this.options.maxPeersPerIsland,
     })
+
+    for (const peer of group) {
+      peer.islandId = newIslandId
+    }
   }
 
   getIslands(): Island[] {
