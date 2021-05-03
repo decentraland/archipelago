@@ -22,12 +22,15 @@
   "homepage": "https://github.com/decentraland/peer-islands#readme",
   "devDependencies": {
     "@microsoft/api-extractor": "^7.12.1",
+    "@types/assert": "^1.5.4",
     "@types/glob": "^7.1.3",
+    "@types/lodash.get": "^4.4.6",
     "@types/mocha": "^8.2.2",
     "@types/uuid": "^8.3.0",
+    "assert": "^2.0.0",
     "ebnf": "^1.9.0",
-    "expect": "^26.6.2",
     "glob": "^7.1.6",
+    "lodash.get": "^4.4.2",
     "mocha": "^8.3.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4"

@@ -11,6 +11,17 @@ export class Closure {
     this.variables.set(name, value)
   }
 
+  defn(name: string | symbol, value: CallableFunction) {
+    const fn: CallableFunction = (...args) => {
+      try {
+        return value(...args)
+      } catch (e) {
+        throw new Error('Error calling JS function: "' + name.toString() + '": ' + e.toString())
+      }
+    }
+    this.variables.set(name, fn)
+  }
+
   get(name: string | symbol): any {
     if (this.variables.has(name)) return this.variables.get(name)
     if (this.parentContext) return this.parentContext.get(name)

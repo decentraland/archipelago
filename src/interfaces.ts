@@ -16,7 +16,7 @@ export interface Archipelago {
   setPeerPosition(id: string, position: Position3D): void
   getIslands(): Island[]
   getIsland(id: string): Island | undefined
-  clearPeer(id: string): void
+  clearPeer(id: string): boolean
 }
 
 export type ArchipelagoOptions = {

@@ -1,5 +1,4 @@
 import { Island, Archipelago, Position3D, PeerData, ArchipelagoOptions } from "./interfaces"
-import { v4 } from "uuid"
 
 type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
@@ -24,6 +23,12 @@ class ArchipelagoImpl implements Archipelago {
 
   private options: ArchipelagoOptions
 
+  private idCount = 0
+  private generateId(): string {
+    this.idCount++
+    return "I" + this.idCount.toString(36)
+  }
+
   constructor(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>) {
     this.options = { ...defaultOptions, ...options }
   }
@@ -38,7 +43,7 @@ class ArchipelagoImpl implements Archipelago {
     this.updateIslands()
   }
 
-  clearPeer(id: string): void {
+  clearPeer(id: string): boolean {
     const peer = this.peers.get(id)
     if (peer) {
       this.peers.delete(id)
@@ -46,7 +51,9 @@ class ArchipelagoImpl implements Archipelago {
         this.clearPeerFromIsland(id, this.islands.get(peer.islandId)!)
       }
       this.updateIslands()
+      return true
     }
+    return false
   }
 
   clearPeerFromIsland(id: string, island: Island) {
@@ -129,7 +136,7 @@ class ArchipelagoImpl implements Archipelago {
 
     while (islands.length > 0) {
       const anIsland = islands.shift()!
-      
+
       this.addPeersToIsland(biggest, anIsland.peers)
 
       this.islands.delete(anIsland.id)
@@ -158,7 +165,7 @@ class ArchipelagoImpl implements Archipelago {
   }
 
   createIsland(group: PeerData[]) {
-    const newIslandId = v4()
+    const newIslandId = this.generateId()
 
     this.islands.set(newIslandId, {
       id: newIslandId,

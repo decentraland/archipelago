@@ -3,7 +3,8 @@
 // to mantain compatibility
 
 import { IToken } from "ebnf"
-import { Closure, evaluate, parse } from "./dsl"
+import { BaseClosure, Closure, evaluate, parse } from "./dsl"
+import { configureLibs } from "./lib"
 
 export type PositionCapable<T> = { start: number; end: number } & T
 export type DocumentError = PositionCapable<{ message: string }>
@@ -13,6 +14,12 @@ export type DocumentParsingResult = {
   errors: DocumentError[]
   steps: Step[]
   document: IToken
+}
+
+export function getClosure(): BaseClosure {
+  const closure = new BaseClosure()
+  configureLibs(closure)
+  return closure
 }
 
 export function parseTestSuite(code: string): DocumentParsingResult {
@@ -50,11 +57,13 @@ export function parseTestSuite(code: string): DocumentParsingResult {
         )
         break
       }
+      case child.type == "SyntaxError":
+        continue;
       default:
         errors.push({
           start: child.start,
           end: child.end,
-          message: "Invalid test step, it will be ignored",
+          message: `Invalid test step (${child.type}), it will be ignored`,
         })
     }
   }

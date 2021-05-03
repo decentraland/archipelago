@@ -19,6 +19,7 @@ export function parse(code: string): ParseResult {
     node.children = node.children.filter(($) => $.type != "Discard" && $.type != "Comment")
 
     if (node.type == "SyntaxError" || node.type == "RestSyntaxError") {
+      node.type = "SyntaxError"
       syntaxErrors.push(node)
       // do not go deeper
       return false

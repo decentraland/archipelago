@@ -1,11 +1,12 @@
-import React from 'react';
+import React from "react"
+import { Editor } from "./Editor"
 
 function App() {
   return (
     <div className="App">
-      Hello world
+      <Editor />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
