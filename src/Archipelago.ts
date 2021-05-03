@@ -1,4 +1,5 @@
 import { Island, Archipelago, Position3D, PeerData, ArchipelagoOptions } from "./interfaces"
+import { findMax, findMaxIndex, popMax } from "./utils"
 
 type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
@@ -117,22 +118,14 @@ class ArchipelagoImpl implements Archipelago {
     if (peerGroups.length <= 1) {
       return
     } else {
-      const [islandPeers, ...rest] = peerGroups
-      island.peers = islandPeers
-      rest.forEach((group) => this.createIsland(group))
+      const biggestGroup = popMax(peerGroups, (group) => group.length)!
+      island.peers = biggestGroup
+      peerGroups.forEach((group) => this.createIsland(group))
     }
   }
 
   mergeIslands(...islands: Island[]) {
-    let biggestIndex = 0
-
-    for (let i = 1; i < islands.length; i++) {
-      if (islands[i].peers.length > islands[biggestIndex].peers.length) {
-        biggestIndex = i
-      }
-    }
-
-    const [biggest] = islands.splice(biggestIndex, 1)
+    const biggest = popMax(islands, (island) => island.peers.length)! // We should never call mergeIslands with an empty list
 
     while (islands.length > 0) {
       const anIsland = islands.shift()!
