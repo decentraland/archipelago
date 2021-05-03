@@ -4,7 +4,7 @@
             })
 
 ; test functions
-(def ensureIslandsCount #(assert/equals (get (getIslands) "length") %1))
+(def ensureIslandsCount #(assert/equal (get (getIslands) "length") %1))
 
 ; test case 1
 (move ["1" 0 0 0]

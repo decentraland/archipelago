@@ -1,3 +1,5 @@
+import { IdGenerator } from "./idGenerator"
+
 export type Position3D = [number, number, number]
 
 export type PeerData = {
@@ -13,6 +15,7 @@ export type Island = {
 }
 
 export interface Archipelago {
+  getOptions(): ArchipelagoOptions
   setPeerPosition(id: string, position: Position3D): void
   getIslands(): Island[]
   getIsland(id: string): Island | undefined
@@ -24,4 +27,5 @@ export type ArchipelagoOptions = {
   joinDistance: number
   leaveDistance: number
   distanceFunction: (a: Position3D, b: Position3D) => number
+  islandIdGenerator: IdGenerator
 }

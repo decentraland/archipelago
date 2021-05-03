@@ -15,6 +15,13 @@ type RemoteFile = {
   dirty?: boolean
 }
 
+function makeTransparent(color: string, opacity: number = 0.05): string {
+  const rgb = d3.rgb(color)
+  rgb.opacity = opacity
+
+  return rgb.toString()
+}
+
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value)
 
@@ -83,13 +90,22 @@ export function Editor(props: {}) {
 
   const refD3 = useD3(
     (svg) => {
-      let data: Array<{ peerId: string; x: number; y: number; island: string }> = []
       let islandsData: Array<{ x: number; y: number; island: string }> = []
+      let data: Array<{
+        peerId: string
+        x: number
+        y: number
+        joinRadius: number
+        leaveRadius: number
+        island: string
+      }> = []
 
       renderState?.getIslands().forEach((island) => {
         island.peers.forEach((peer) => {
           data.push({
             island: island.id,
+            joinRadius: Math.sqrt(renderState.getOptions().joinDistance),
+            leaveRadius: Math.sqrt(renderState.getOptions().leaveDistance),
             peerId: peer.id,
             x: peer.position[0],
             y: peer.position[2],
@@ -117,7 +133,7 @@ export function Editor(props: {}) {
         .rangeRound([margin.left, width - margin.right])
 
       // Add Y axis
-      const y1 = d3
+      const y = d3
         .scaleLinear()
         .domain([Math.min(...data.map((d) => d.y - 10)), Math.max(...data.map((d) => d.y + 10))])
         .rangeRound([height - margin.bottom, margin.top])
@@ -134,7 +150,7 @@ export function Editor(props: {}) {
         g
           .attr("transform", `translate(${margin.left},0)`)
           .style("color", "steelblue")
-          .call(d3.axisLeft(y1).ticks(null, "s"))
+          .call(d3.axisLeft(y).ticks(null, "s"))
           .call((g) => g.select(".domain").remove())
           .call((g) =>
             g
@@ -150,9 +166,8 @@ export function Editor(props: {}) {
       // Color scale: give me a specie name, I return a color
       var color = d3
         .scaleOrdinal()
-        .domain(["setosa", "versicolor", "virginica"])
-        .range(["#440154ff", "#21908dff", "#fde725ff"])
-
+        .domain(renderState?.getIslands().map((it) => it.id) ?? [])
+        .range(d3.schemeCategory10)
       const ANIM_DURATION = 300
 
       // Highlight the specie that is hovered
@@ -199,7 +214,7 @@ export function Editor(props: {}) {
         .append("rect")
         .attr("class", (d) => "island")
         .attr("x", (d) => x(d.x) - 2)
-        .attr("y", (d) => y1(d.y) - 2)
+        .attr("y", (d) => y(d.y) - 2)
         .attr("width", (d) => 5)
         .attr("height", (d) => 5)
 
@@ -213,14 +228,14 @@ export function Editor(props: {}) {
         .duration(ANIM_DURATION)
         .attr("class", (d) => "dot " + d.island)
         .attr("x", (d) => x(d.x) - 2)
-        .attr("y", (d) => y1(d.y) - 2)
+        .attr("y", (d) => y(d.y) - 2)
 
       svgPoints
         .enter()
         .append("circle")
         .attr("class", (d) => "dot " + d.island)
         .attr("cx", (d) => x(d.x))
-        .attr("cy", (d) => y1(d.y))
+        .attr("cy", (d) => y(d.y))
         .attr("r", 5)
         .on("mouseover", highlight)
         .on("mouseleave", doNotHighlight)
@@ -232,14 +247,14 @@ export function Editor(props: {}) {
         .duration(ANIM_DURATION)
         .attr("class", (d) => "dot " + d.island)
         .attr("cx", (d) => x(d.x))
-        .attr("cy", (d) => y1(d.y))
+        .attr("cy", (d) => y(d.y))
         .attr("r", 5)
 
       svgPointLabels
         .enter()
         .append("text")
         .attr("x", (d) => x(d.x) - 10)
-        .attr("y", (d) => y1(d.y) - 10)
+        .attr("y", (d) => y(d.y) - 10)
         .text(function (d) {
           return d.island + ": " + d.peerId
         })
@@ -251,10 +266,38 @@ export function Editor(props: {}) {
         .transition()
         .duration(ANIM_DURATION)
         .attr("x", (d) => x(d.x) - 10)
-        .attr("y", (d) => y1(d.y) - 10)
+        .attr("y", (d) => y(d.y) - 10)
         .text(function (d) {
           return d.island + ": " + d.peerId
         })
+
+      const d3dataradius = svg
+        .select(".plot-area")
+        .selectAll(".connectRadius")
+        .data(data, function (d: any) {
+          return d.peerId
+        })
+
+      d3dataradius
+        .enter()
+        .append("circle")
+        .attr("class", (d) => "connectRadius")
+        .style("fill", (d) => makeTransparent(color(d.island) as string))
+        .attr("cx", (d) => x(d.x))
+        .attr("cy", (d) => y(d.y))
+        .attr("r", (d) => x(d.joinRadius)) // We can scale the radius using the x axis, since x & y are the same scale
+        .lower()
+
+      d3dataradius
+        .transition()
+        .duration(ANIM_DURATION)
+        .attr("class", (d) => "connectRadius")
+        .style("fill", (d) => makeTransparent(color(d.island) as string))
+        .attr("cx", (d) => x(d.x))
+        .attr("cy", (d) => y(d.y))
+        .attr("r", (d) => x(d.joinRadius))
+
+      d3dataradius.exit().remove()
     },
     [renderState]
   )

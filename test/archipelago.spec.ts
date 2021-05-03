@@ -95,7 +95,7 @@ describe("archipelago", () => {
 
     const island = archipelago.getIsland(islandId)
 
-    expect.strictEqual(island!.peers.map((it) => it.id).sort(), ["1", "2", "4"])
+    expect.notStrictEqual(island!.peers.map((it) => it.id).sort(), ["1", "2", "4"])
 
     expectIslandWith(archipelago, "3")
   })

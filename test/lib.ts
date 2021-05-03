@@ -1,26 +1,16 @@
 import { Archipelago, ArchipelagoOptions, defaultArchipelago } from "../src"
 import { BaseClosure, evaluate } from "tiny-clojure"
+import { NodeError } from "tiny-clojure/dist/types"
 import assert from "assert"
 import get from "lodash.get"
-
-function arraysEqual(a: any[], b: any[]) {
-  if (a === b) return true
-  if (a == null || b == null) return false
-  if (a.length !== b.length) return false
-
-  for (var i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false
-  }
-
-  return true
-}
+import deepEqual from "fast-deep-equal"
 
 export function expectIslandWith(archipelago: Archipelago, ...ids: string[]) {
   assert(Array.isArray(ids))
   const sortedIds = ids.sort()
   assert("getIslands" in archipelago)
   const islands = archipelago.getIslands()
-  const condition = islands.some((it) => arraysEqual(it.peers.map((peer) => peer.id).sort(), sortedIds))
+  const condition = islands.some((it) => deepEqual(it.peers.map((peer) => peer.id).sort(), sortedIds))
   if (!condition) {
     throw new Error(
       "\nThere are no islands with the peers:\n  " +
@@ -92,15 +82,67 @@ export function configureLibs(closure: BaseClosure) {
     return get(obj, path)
   })
 
-  // (equals a b)
-  closure.defJsFunction("assert/equals", async function (a, b) {
-    assert.strictEqual(arguments.length, 2)
-    assert.strictEqual(a, b)
+  // (* ...args)
+  closure.defJsFunction("*", async function (...args: any[]) {
+    return args.reduce((a, b) => a * b, 1)
   })
 
+  // (+ ...args)
+  closure.defJsFunction("+", async function (...args: any[]) {
+    return args.reduce((a, b) => a + b, 0)
+  })
+
+  // (- ...args)
+  closure.defJsFunction("-", async function (...args: any[]) {
+    return args.reduce((a, b) => a - b)
+  })
+
+  // (/ ...args)
+  closure.defJsFunction("/", async function (...args: any[]) {
+    return args.reduce((a, b) => a / b)
+  })
+
+  // (= a b)
+  closure.defJsFunction("=", async function (a, b) {
+    assert.deepStrictEqual(arguments.length, 2, "(= a b) requires exactly two arguments")
+    return deepEqual(a, b)
+  })
+
+  // (not a)
+  closure.defJsFunction("not", async function (a) {
+    assert.deepStrictEqual(arguments.length, 1, "(not arg) requires exactly one argument, got: " + arguments.length)
+    return !a
+  })
+
+  // (assert/equal a b)
+  closure.defJsFunction("assert/equal", async function (a, b) {
+    assert.deepStrictEqual(arguments.length, 2, "assert/equal requires exactly two arguments")
+    assert.deepStrictEqual(a, b)
+    return true
+  })
+
+  // (assert/notEqual a b)
   closure.defJsFunction("assert/notEqual", async function (a, b) {
-    assert.strictEqual(arguments.length, 2)
-    assert.notStrictEqual(a, b)
+    assert.strictEqual(arguments.length, 2, "assert/notEqual requires exactly two arguments")
+    assert.notDeepStrictEqual(a, b)
+    return true
+  })
+
+  // (assert/throws ...assertions)
+  closure.defn("assert/throws", async (node, assertions, closure) => {
+    for (let assertion of assertions) {
+      await assert.rejects(async () => {
+        await evaluate(assertion, closure)
+      }, new NodeError("The assertion didn't fail", assertion))
+    }
+    return true
+  })
+
+  // (assert "name" condition)
+  closure.defJsFunction("throwIf", async function (condition) {
+    if (condition) {
+      throw new Error("bla")
+    }
   })
 
   // (assert "name" condition)
@@ -118,8 +160,13 @@ export function configureLibs(closure: BaseClosure) {
       name = assertions.shift()!.text
     }
 
-    for (let assertion of assertions) {
-      await evaluate(assertion, closure)
+    try {
+      for (let assertion of assertions) {
+        await evaluate(assertion, closure)
+      }
+    } catch (e) {
+      e.message = e.message + `\nat: ${name} assertion`
+      throw e
     }
   })
 }
