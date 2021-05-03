@@ -3,7 +3,7 @@
 // to mantain compatibility
 
 import { IToken } from "ebnf"
-import { BaseClosure, Closure, evaluate, parse } from "./dsl"
+import { BaseClosure, Closure, evaluate, parse } from "tiny-clojure"
 import { configureLibs } from "./lib"
 
 export type PositionCapable<T> = { start: number; end: number } & T

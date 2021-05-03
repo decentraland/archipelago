@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { ErrorBoundary } from "./ErrorBounday"
 import { parseTestSuite, DocumentParsingResult, DocumentError, getClosure } from "../../test/runner"
 import type * as monacoType from "monaco-editor/esm/vs/editor/editor.api"
-import { Closure, LineMapper } from "../../test/dsl"
+import { Closure, LineMapper } from "tiny-clojure"
 import { Archipelago, Island } from "../../src"
 import * as d3 from "d3"
 

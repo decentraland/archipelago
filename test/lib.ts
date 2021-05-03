@@ -1,5 +1,5 @@
 import { Archipelago, ArchipelagoOptions, defaultArchipelago } from "../src"
-import { BaseClosure, evaluate } from "./dsl"
+import { BaseClosure, evaluate } from "tiny-clojure"
 import assert from "assert"
 import get from "lodash.get"
 
