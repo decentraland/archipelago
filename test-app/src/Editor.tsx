@@ -319,7 +319,6 @@ export function Editor(props: {}) {
         }
         if (!selectedFile) {
           setSelectedFile(files[0].basename)
-          setCurrentCode(files[0].content)
         }
         setFiles(r)
       })
@@ -574,6 +573,17 @@ export function Editor(props: {}) {
       editorRef.current.render()
     }
   }, [editorRef.current])
+
+  useEffect(() => {
+    if (selectedFile && files) {
+      const theFile = files[selectedFile]
+      if (theFile) {
+        setRuntimeDecorations([])
+        setSyntaxErrorDecorations([])
+        setCurrentCode(theFile.content)
+      }
+    }
+  }, [selectedFile, files])
 
   return (
     <div>
