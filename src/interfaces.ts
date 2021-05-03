@@ -15,6 +15,7 @@ export type Island = {
 }
 
 export interface Archipelago {
+  getOptions(): ArchipelagoOptions
   setPeerPosition(id: string, position: Position3D): void
   getIslands(): Island[]
   getIsland(id: string): Island | undefined

@@ -34,6 +34,10 @@ class ArchipelagoImpl implements Archipelago {
     this.options = { ...defaultOptions, ...options }
   }
 
+  getOptions() {
+    return this.options
+  }
+
   setPeerPosition(id: string, position: Position3D): void {
     if (!this.peers.has(id)) {
       this.peers.set(id, { id, position })
