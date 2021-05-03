@@ -21,7 +21,9 @@ build({
   define: {
     "process.env.NODE_ENV": '"development"',
     "process.env.NODE_DEBUG": 'null',
-    "global": "globalThis"
+    "global": "globalThis",
+    "process.stderr.isTTY": "true",
+    "process.stderr": "{}",
   },
 })
 

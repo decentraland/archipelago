@@ -84,6 +84,7 @@ export function Editor(props: {}) {
   const refD3 = useD3(
     (svg) => {
       let data: Array<{ peerId: string; x: number; y: number; island: string }> = []
+      let islandsData: Array<{ x: number; y: number; island: string }> = []
 
       renderState?.getIslands().forEach((island) => {
         island.peers.forEach((peer) => {
@@ -94,9 +95,16 @@ export function Editor(props: {}) {
             y: peer.position[2],
           })
         })
-      })
 
-      console.log(data, svg.node()!.clientWidth)
+        const centerX = island.peers.slice(1).reduce((a, b) => b.position[0] + a, island.peers[0].position[0])
+        const centerY = island.peers.slice(1).reduce((a, b) => b.position[0] + a, island.peers[0].position[0])
+
+        islandsData.push({
+          x: centerX / island.peers.length,
+          y: centerY / island.peers.length,
+          island: island.id,
+        })
+      })
 
       // set the dimensions and margins of the graph
       const height = svg.node()!.clientHeight
@@ -165,21 +173,49 @@ export function Editor(props: {}) {
       }
 
       // Add dots
-      const d3data = svg
+      const svgPoints = svg
         .select(".plot-area")
         .selectAll(".dot")
         .data(data, function (d: any) {
           return d.peerId
         })
 
-      const d3datatext = svg
+      const svgIslands = svg
+        .select(".plot-area")
+        .selectAll(".island")
+        .data(islandsData, function (d: any) {
+          return d.island
+        })
+
+      const svgPointLabels = svg
         .select(".plot-area")
         .selectAll("text")
         .data(data, function (d: any) {
           return d.peerId
         })
 
-      d3data
+      svgIslands
+        .enter()
+        .append("rect")
+        .attr("class", (d) => "island")
+        .attr("x", (d) => x(d.x) - 2)
+        .attr("y", (d) => y1(d.y) - 2)
+        .attr("width", (d) => 5)
+        .attr("height", (d) => 5)
+
+        .on("mouseover", highlight)
+        .on("mouseleave", doNotHighlight)
+
+      svgIslands.exit().remove()
+
+      svgIslands
+        .transition()
+        .duration(ANIM_DURATION)
+        .attr("class", (d) => "dot " + d.island)
+        .attr("x", (d) => x(d.x) - 2)
+        .attr("y", (d) => y1(d.y) - 2)
+
+      svgPoints
         .enter()
         .append("circle")
         .attr("class", (d) => "dot " + d.island)
@@ -189,9 +225,9 @@ export function Editor(props: {}) {
         .on("mouseover", highlight)
         .on("mouseleave", doNotHighlight)
 
-      d3data.exit().remove()
+      svgPoints.exit().remove()
 
-      d3data
+      svgPoints
         .transition()
         .duration(ANIM_DURATION)
         .attr("class", (d) => "dot " + d.island)
@@ -199,7 +235,7 @@ export function Editor(props: {}) {
         .attr("cy", (d) => y1(d.y))
         .attr("r", 5)
 
-      d3datatext
+      svgPointLabels
         .enter()
         .append("text")
         .attr("x", (d) => x(d.x) - 10)
@@ -209,9 +245,9 @@ export function Editor(props: {}) {
         })
         .attr("font-size", "10px")
 
-      d3datatext.exit().remove()
+      svgPointLabels.exit().remove()
 
-      d3datatext
+      svgPointLabels
         .transition()
         .duration(ANIM_DURATION)
         .attr("x", (d) => x(d.x) - 10)
