@@ -1,3 +1,4 @@
+import { sequentialIdGenerator } from "./idGenerator"
 import { Island, Archipelago, Position3D, PeerData, ArchipelagoOptions } from "./interfaces"
 import { findMax, findMaxIndex, popMax } from "./utils"
 
@@ -16,6 +17,7 @@ const defaultOptions = {
 
     return xDiff * xDiff + zDiff * zDiff
   },
+  islandIdGenerator: sequentialIdGenerator("I"),
 }
 
 class ArchipelagoImpl implements Archipelago {
@@ -24,10 +26,8 @@ class ArchipelagoImpl implements Archipelago {
 
   private options: ArchipelagoOptions
 
-  private idCount = 0
   private generateId(): string {
-    this.idCount++
-    return "I" + this.idCount.toString(36)
+    return this.options.islandIdGenerator.generateId()
   }
 
   constructor(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>) {
