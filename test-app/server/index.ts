@@ -17,6 +17,7 @@ build({
   debug: true,
   minify: false,
   sourcemap: true,
+  sourcesContent: true,
   logLevel: "info",
   define: {
     "process.env.NODE_ENV": '"development"',

@@ -138,6 +138,15 @@ export function Editor(props: {}) {
         .domain([Math.min(...data.map((d) => d.y - 10)), Math.max(...data.map((d) => d.y + 10))])
         .rangeRound([height - margin.bottom, margin.top])
 
+      const maxValue = Math.abs(x.domain()[1] - x.domain()[0])
+      const maxScaled = Math.abs(x.range()[1] - x.range()[0])
+
+      console.log("MAX SCALED " + maxScaled)
+
+      const radiusScale = d3.scaleLinear()
+        .domain([0, maxValue])
+        .range([0, maxScaled])
+
       svg
         .select<SVGGElement>(".x-axis")
         .call((g) =>
@@ -285,7 +294,7 @@ export function Editor(props: {}) {
         .style("fill", (d) => makeTransparent(color(d.island) as string))
         .attr("cx", (d) => x(d.x))
         .attr("cy", (d) => y(d.y))
-        .attr("r", (d) => x(d.joinRadius)) // We can scale the radius using the x axis, since x & y are the same scale
+        .attr("r", (d) => radiusScale(d.joinRadius))
         .lower()
 
       d3dataradius
@@ -295,7 +304,7 @@ export function Editor(props: {}) {
         .style("fill", (d) => makeTransparent(color(d.island) as string))
         .attr("cx", (d) => x(d.x))
         .attr("cy", (d) => y(d.y))
-        .attr("r", (d) => x(d.joinRadius))
+        .attr("r", (d) => radiusScale(d.joinRadius))
 
       d3dataradius.exit().remove()
     },

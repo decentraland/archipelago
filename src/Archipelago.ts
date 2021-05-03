@@ -63,8 +63,12 @@ class ArchipelagoImpl implements Archipelago {
 
   clearPeerFromIsland(id: string, island: Island) {
     const idx = island.peers.findIndex((it) => it.id === id)
-    if (idx > 0) {
+    if (idx >= 0) {
       island.peers.splice(idx, 1)
+    }
+
+    if(island.peers.length === 0) {
+      this.islands.delete(island.id)
     }
   }
 
