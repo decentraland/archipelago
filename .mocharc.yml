@@ -1,9 +1,6 @@
 require:
   - 'ts-node/register'
-  # - './test/setup.ts'
-reporter:
-  - 'spec'
-  - list
+reporter: spec
 watch-files:
   - 'dist/**/*.js'
   - 'src/**/*.ts'

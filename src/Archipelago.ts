@@ -1,5 +1,6 @@
+import { sequentialIdGenerator } from "./idGenerator"
 import { Island, Archipelago, Position3D, PeerData, ArchipelagoOptions } from "./interfaces"
-import { v4 } from "uuid"
+import { findMax, findMaxIndex, popMax } from "./utils"
 
 type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
@@ -16,6 +17,7 @@ const defaultOptions = {
 
     return xDiff * xDiff + zDiff * zDiff
   },
+  islandIdGenerator: sequentialIdGenerator("I"),
 }
 
 class ArchipelagoImpl implements Archipelago {
@@ -24,8 +26,16 @@ class ArchipelagoImpl implements Archipelago {
 
   private options: ArchipelagoOptions
 
+  private generateId(): string {
+    return this.options.islandIdGenerator.generateId()
+  }
+
   constructor(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>) {
     this.options = { ...defaultOptions, ...options }
+  }
+
+  getOptions() {
+    return this.options
   }
 
   setPeerPosition(id: string, position: Position3D): void {
@@ -38,7 +48,7 @@ class ArchipelagoImpl implements Archipelago {
     this.updateIslands()
   }
 
-  clearPeer(id: string): void {
+  clearPeer(id: string): boolean {
     const peer = this.peers.get(id)
     if (peer) {
       this.peers.delete(id)
@@ -46,13 +56,19 @@ class ArchipelagoImpl implements Archipelago {
         this.clearPeerFromIsland(id, this.islands.get(peer.islandId)!)
       }
       this.updateIslands()
+      return true
     }
+    return false
   }
 
   clearPeerFromIsland(id: string, island: Island) {
     const idx = island.peers.findIndex((it) => it.id === id)
-    if (idx > 0) {
+    if (idx >= 0) {
       island.peers.splice(idx, 1)
+    }
+
+    if(island.peers.length === 0) {
+      this.islands.delete(island.id)
     }
   }
 
@@ -110,26 +126,18 @@ class ArchipelagoImpl implements Archipelago {
     if (peerGroups.length <= 1) {
       return
     } else {
-      const [islandPeers, ...rest] = peerGroups
-      island.peers = islandPeers
-      rest.forEach((group) => this.createIsland(group))
+      const biggestGroup = popMax(peerGroups, (group) => group.length)!
+      island.peers = biggestGroup
+      peerGroups.forEach((group) => this.createIsland(group))
     }
   }
 
   mergeIslands(...islands: Island[]) {
-    let biggestIndex = 0
-
-    for (let i = 1; i < islands.length; i++) {
-      if (islands[i].peers.length > islands[biggestIndex].peers.length) {
-        biggestIndex = i
-      }
-    }
-
-    const [biggest] = islands.splice(biggestIndex, 1)
+    const biggest = popMax(islands, (island) => island.peers.length)! // We should never call mergeIslands with an empty list
 
     while (islands.length > 0) {
       const anIsland = islands.shift()!
-      
+
       this.addPeersToIsland(biggest, anIsland.peers)
 
       this.islands.delete(anIsland.id)
@@ -158,7 +166,7 @@ class ArchipelagoImpl implements Archipelago {
   }
 
   createIsland(group: PeerData[]) {
-    const newIslandId = v4()
+    const newIslandId = this.generateId()
 
     this.islands.set(newIslandId, {
       id: newIslandId,

@@ -10,6 +10,64 @@
   code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
   }
+
+  .editor {
+    position: absolute;
+    top: 53px;
+    left: 0;
+    bottom: 0;
+    width: 50%;
+    border-right: 1px solid #666;
+  }
+
+  .ok-test {
+    background: rgba(0,255,0,0.3);
+  }
+
+  .ok-test-content::before,
+  .err-test-content::before {
+    display: inline-block;
+    padding: 0px 5px;
+    font-style: italic;
+    font-weight: bold;
+    box-shadow: inset 0 0 1px;
+    border-radius: 3px;
+    margin: -1px 3px;
+  }
+
+  .scroll {
+    width: calc(50vw - 1px);
+    position: absolute;
+    top: 53px;
+    right: 0;
+    bottom: 0;
+  }
+
+  .ok-test-content::before {
+    content: "#_PASSED";
+    color: green;
+  }
+
+  .err-test-content::before {
+    content: "#_FAILED";
+    color: red;
+  }
+
+  .top-bar {
+    background: #f0f0f0;
+    height: 52px;
+    border-bottom: 1px solid #666;
+  }
+
+  .red-background {
+    background: lightcoral;
+  }
+  .gray-background {
+    background: #eee;
+  }
+  .green-background {
+    background: lightgreen;
+  }
 </style>
 <div id="root"></div>
 <script src="index.js"></script>

@@ -7,6 +7,10 @@
 // @public (undocumented)
 export interface Archipelago {
     // (undocumented)
+    clearPeer(id: string): boolean;
+    // (undocumented)
+    getIsland(id: string): Island | undefined;
+    // (undocumented)
     getIslands(): Island[];
     // (undocumented)
     setPeerPosition(id: string, position: Position3D): void;
@@ -36,6 +40,7 @@ export type Island = {
 export type PeerData = {
     id: string;
     position: Position3D;
+    islandId?: string;
 };
 
 // @public (undocumented)
