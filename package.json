@@ -7,19 +7,19 @@
   "scripts": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/decentraland/peer-islands"
+    "url": "git+https://github.com/decentraland/archipelago"
   },
   "keywords": [],
   "author": "",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/decentraland/peer-islands/issues"
+    "url": "https://github.com/decentraland/archipelago/issues"
   },
   "prettier": {
     "printWidth": 120,
     "semi": false
   },
-  "homepage": "https://github.com/decentraland/peer-islands#readme",
+  "homepage": "https://github.com/decentraland/archipelago#readme",
   "devDependencies": {
     "@microsoft/api-extractor": "^7.12.1",
     "@types/assert": "^1.5.4",
