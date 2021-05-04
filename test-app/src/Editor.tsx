@@ -104,8 +104,8 @@ export function Editor(props: {}) {
         island.peers.forEach((peer) => {
           data.push({
             island: island.id,
-            joinRadius: Math.sqrt(renderState.getOptions().joinDistance),
-            leaveRadius: Math.sqrt(renderState.getOptions().leaveDistance),
+            joinRadius: Math.sqrt(renderState.getOptions().joinDistance) / 2,
+            leaveRadius: Math.sqrt(renderState.getOptions().leaveDistance) / 2,
             peerId: peer.id,
             x: peer.position[0],
             y: peer.position[2],

@@ -1,6 +1,6 @@
 import { sequentialIdGenerator } from "./idGenerator"
 import { Island, Archipelago, Position3D, PeerData, ArchipelagoOptions } from "./interfaces"
-import { findMax, findMaxIndex, popMax } from "./utils"
+import { popMax } from "./utils"
 
 type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
