@@ -143,9 +143,7 @@ export function Editor(props: {}) {
 
       console.log("MAX SCALED " + maxScaled)
 
-      const radiusScale = d3.scaleLinear()
-        .domain([0, maxValue])
-        .range([0, maxScaled])
+      const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, maxScaled])
 
       svg
         .select<SVGGElement>(".x-axis")
@@ -663,10 +661,9 @@ export function Editor(props: {}) {
           <svg
             ref={refD3}
             style={{
-              height: 500,
-              width: "100%",
-              marginRight: "0px",
-              marginLeft: "0px",
+              width: "75%",
+              aspectRatio: "1/1",
+              marginLeft: "12.5%",
             }}
           >
             <g className="plot-area" />
