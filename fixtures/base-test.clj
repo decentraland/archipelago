@@ -23,11 +23,11 @@
 (expectIslandsWith [["1" "2" "4"] ["3"]])
 
 ; "move the 3rd closer, should bridge islands"
-(move ["3", 100, 0, 100])
+(move ["3", 100, 0, 10])
 (ensureIslandsCount 1)
 (expectIslandWith ["1" "2" "3" "4"])
 
 ; "disconnect 4th peer"
 (disconnect ["4"])
-(ensureIslandsCount 1)
-(expectIslandsWith [["1" "2" "3"]])
+(ensureIslandsCount 2)
+(expectIslandsWith [["1" "2"] ["3"]])
