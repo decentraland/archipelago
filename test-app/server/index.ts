@@ -40,9 +40,6 @@ app.post("/save-fixture", (req, res) => {
     content: string
   } = req.body
 
-  assert(typeof data.basename == "string")
-  assert(typeof data.content == "string")
-
   fs.writeFileSync(path.resolve(__dirname, "../../fixtures", path.basename(data.basename)), data.content)
 
   res.send({ ok: true }).end()

@@ -31,3 +31,7 @@
 (disconnect ["4"])
 (ensureIslandsCount 2)
 (expectIslandsWith [["1" "2"] ["3"]])
+
+(move ["4" 150 0 10])
+(ensureIslandsCount 2)
+(expectIslandsWith [["1" "2"] ["3" "4"]])

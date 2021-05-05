@@ -366,6 +366,25 @@ export function Editor(props: {}) {
       },
     })
 
+    editor.addAction({
+      id: "save-file",
+      // A label of the action that will be presented to the user.
+      label: "Save current file",
+
+      // An optional array of keybindings for the action.
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S],
+
+      contextMenuGroupId: "file",
+
+      contextMenuOrder: 1.5,
+
+      // Method that will be executed when the action is triggered.
+      // @param editor The editor instance is passed in as a convinience
+      run: function (editor, ...args) {
+        saveSelectedFile()
+      },
+    })
+
     monaco.languages.registerCodeActionProvider("clojure", {
       provideCodeActions: function (model, range, context, token) {
         const steps = memoizedParse(model.getValue())
@@ -592,6 +611,36 @@ export function Editor(props: {}) {
     }
   }, [selectedFile, files])
 
+  async function saveSelectedFile() {
+    setLoadingSave(true)
+    try {
+      if (selectedFile && files) {
+        const theFile = files[selectedFile]
+        if (theFile) {
+          const response = await fetch("/save-fixture", {
+            method: "post",
+            body: JSON.stringify({
+              basename: theFile.basename,
+              content: theFile.content,
+            }),
+            headers: { "Content-Type": "application/json" },
+          })
+
+          if (response.ok) {
+            theFile.dirty = false
+            setFiles({ ...files })
+          } else {
+            throw new Error("Response not OK: " + response.status)
+          }
+        }
+      }
+    } catch (e) {
+      alert("Couldn't save: " + e.message)
+    } finally {
+      setLoadingSave(false)
+    }
+  }
+
   return (
     <div>
       <div className="editor" style={{ width: size }}>
@@ -635,6 +684,7 @@ export function Editor(props: {}) {
             <button
               className=""
               disabled={!(files && selectedFile && files[selectedFile] && files[selectedFile].dirty)}
+              onClick={() => saveSelectedFile()}
             >
               Save<span className="AnimatedEllipsis"></span>
             </button>
