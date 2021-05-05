@@ -28,6 +28,9 @@ export function expectIslandsWith(archipelago: Archipelago, ...islandIds: string
   assert.strictEqual(archipelago.getIslands().length, islandIds.length)
 }
 
+export function expectIslandsCount(archipelago: Archipelago, count: number) {
+  assert.strictEqual(archipelago.getIslands().length, count)
+}
 export function configureLibs(closure: BaseClosure) {
   // (configure { options })
   closure.defJsFunction("configure", (options: ArchipelagoOptions) => {
@@ -63,6 +66,12 @@ export function configureLibs(closure: BaseClosure) {
   closure.defJsFunction("expectIslandsWith", (ids, arch) => {
     const archipelago = (arch || closure.get("archipelago")) as Archipelago
     expectIslandsWith(archipelago, ...ids)
+  })
+
+  // (ensureIslandsCount count arch?)
+  closure.defJsFunction("ensureIslandsCount", (count: number, arch) => {
+    const archipelago = (arch || closure.get("archipelago")) as Archipelago
+    expectIslandsCount(archipelago, count)
   })
 
   // (disconnect [...ids] arch?)

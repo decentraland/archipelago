@@ -3,9 +3,6 @@
              "leaveDistance" 6400 ; 80 * 80
             })
 
-; test functions
-(def ensureIslandsCount #(assert/equal (get (getIslands) "length") %1))
-
 ; test case 1
 (move ["1" 0 0 0]
       ["2" 16 0 16])
@@ -19,7 +16,7 @@
 
 ; "add 4th peer, should be part of first island"
 (move ["4" 50 0 0])
-(ensureIslandsCount 1)
+(ensureIslandsCount 2)
 (expectIslandsWith [["1" "2" "4"] ["3"]])
 
 ; "move the 3rd closer, should bridge islands"

@@ -15,6 +15,11 @@ type RemoteFile = {
   dirty?: boolean
 }
 
+const DEFAULT_FILE_CONTENT = `(configure { "joinDistance" 4096 ; 64 * 64
+             "leaveDistance" 6400 ; 80 * 80
+            })
+`
+
 function makeTransparent(color: string, opacity: number = 0.05): string {
   const rgb = d3.rgb(color)
   rgb.opacity = opacity
@@ -73,7 +78,6 @@ export function Editor(props: {}) {
 
   const editorRef = useRef<monacoType.editor.IStandaloneCodeEditor>()
 
-  const [loadingCopy, setLoadingCopy] = useState<boolean>(false)
   const [loadingSave, setLoadingSave] = useState<boolean>(false)
   const [steps, setSteps] = useState<DocumentParsingResult | null>(null)
   const [, setIsEditorReady] = useState(false)
@@ -611,33 +615,51 @@ export function Editor(props: {}) {
     }
   }, [selectedFile, files])
 
-  async function saveSelectedFile() {
+  async function saveFile(theFile: RemoteFile) {
     setLoadingSave(true)
     try {
-      if (selectedFile && files) {
-        const theFile = files[selectedFile]
-        if (theFile) {
-          const response = await fetch("/save-fixture", {
-            method: "post",
-            body: JSON.stringify({
-              basename: theFile.basename,
-              content: theFile.content,
-            }),
-            headers: { "Content-Type": "application/json" },
-          })
+      const response = await fetch("/save-fixture", {
+        method: "post",
+        body: JSON.stringify({
+          basename: theFile.basename,
+          content: theFile.content,
+        }),
+        headers: { "Content-Type": "application/json" },
+      })
 
-          if (response.ok) {
-            theFile.dirty = false
-            setFiles({ ...files })
-          } else {
-            throw new Error("Response not OK: " + response.status)
-          }
-        }
+      if (response.ok) {
+        theFile.dirty = false
+        setFiles({ ...files, [theFile.basename]: theFile })
+      } else {
+        throw new Error("Response not OK: " + response.status)
       }
     } catch (e) {
       alert("Couldn't save: " + e.message)
     } finally {
       setLoadingSave(false)
+    }
+  }
+
+  async function saveSelectedFile() {
+    if (selectedFile && files) {
+      const theFile = files[selectedFile]
+      if (theFile) {
+        await saveFile(theFile)
+      }
+    }
+  }
+
+  async function createNewFile() {
+    let filename = prompt("Enter file name")
+
+    if (filename) {
+      if (!filename.endsWith(".clj")) {
+        filename = filename + ".clj"
+      }
+
+      await saveFile({ basename: filename, content: DEFAULT_FILE_CONTENT })
+
+      setSelectedFile(filename)
     }
   }
 
@@ -688,13 +710,10 @@ export function Editor(props: {}) {
             >
               Save<span className="AnimatedEllipsis"></span>
             </button>
-            <button className="">New file</button>
-          </div>
-          <div>
-            <button className="" onClick={() => setRunToLine(0)}>
-              Run all
+            <button className="" onClick={() => createNewFile()}>
+              New file
             </button>
-            <div className="p-2">
+            <div style={{ display: "inline-block", padding: "5px" }}>
               {loadingSave && (
                 <span className="m-1">
                   <span>Saving</span>
@@ -702,6 +721,11 @@ export function Editor(props: {}) {
                 </span>
               )}
             </div>
+          </div>
+          <div>
+            <button className="" onClick={() => setRunToLine(0)}>
+              Run all
+            </button>
           </div>
           <div className="p-2 d-flex" style={{ alignItems: "center" }}>
             <span className="ml-4"></span>

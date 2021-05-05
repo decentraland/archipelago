@@ -3,10 +3,7 @@
 (configure { "joinDistance" 4096 ; 64 * 64
              "leaveDistance" 6400 ; 80 * 80
             })
-; test functions
-(def ensureIslandsCount #(assert/equal (get (getIslands) "length") %1))
-; make sure we can call functions
-(ensureIslandsCount 0)
+
 ; test case 1
 (move ["1" 0 0 0]
       ["2" 16 0 16])
