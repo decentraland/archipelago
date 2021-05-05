@@ -1,4 +1,4 @@
-import { defaultArchipelago, Archipelago } from "../src"
+import { defaultArchipelago, Archipelago, IslandUpdates } from "../src"
 
 import expect from "assert"
 import { expectIslandsWith, expectIslandWith } from "./lib"
@@ -13,11 +13,7 @@ describe("archipelago", () => {
   })
 
   function setPositions(...positions: PositionWithId[]) {
-    for (const position of positions) {
-      const [id, ...coordinates] = position
-
-      archipelago.setPeerPosition(id, coordinates)
-    }
+    archipelago.setPeersPositions(...positions.map(([id, ...position]) => ({ id, position })))
   }
 
   it("joins two close peers in island", () => {
@@ -105,7 +101,7 @@ describe("archipelago", () => {
 
     expectIslandsWith(archipelago, ["1", "2", "3", "4"])
 
-    archipelago.clearPeer("4")
+    archipelago.clearPeers("4")
 
     expectIslandsWith(archipelago, ["1", "2"], ["3"])
   })
@@ -115,34 +111,48 @@ describe("archipelago", () => {
 
     expectIslandsWith(archipelago, ["1", "2"])
 
-    archipelago.clearPeer("1")
-    archipelago.clearPeer("2")
+    archipelago.clearPeers("1")
+    archipelago.clearPeers("2")
 
     setPositions(["1", 0, 0, 0])
 
     expectIslandsWith(archipelago, ["1"])
   })
 
+  function expectChangedTo(updates: IslandUpdates, peerId: string, islandId: string) {
+    expect.strictEqual(updates[peerId].islandId, islandId)
+    expect.strictEqual(updates[peerId].action, "changeTo")
+  }
+
+  function expectLeft(updates: IslandUpdates, peerId: string, islandId: string) {
+    expect.strictEqual(updates[peerId].islandId, islandId)
+    expect.strictEqual(updates[peerId].action, "leave")
+  }
+
+  function expectNoUpdate(updates: IslandUpdates, peerId: string) {
+    expect.strictEqual(typeof updates[peerId], "undefined")
+  }
+
   it("provides updates when setting positions", () => {
-    let updates = archipelago.setPeerPosition("0", [15, 0, 0])
-    
-    expect.strictEqual(updates["0"], "I1")
-    updates = archipelago.setPeerPosition("1", [0, 0, 0])
-    expect.strictEqual(updates["1"], "I1")
-    expect.strictEqual(typeof updates["0"], "undefined")
+    let updates = archipelago.setPeersPositions({ id: "0", position: [15, 0, 0] })
 
-    updates = archipelago.setPeerPosition("2", [100, 0, 0])
+    expectChangedTo(updates, "0", "I1")
+    updates = archipelago.setPeersPositions({ id: "1", position: [0, 0, 0] })
+    expectChangedTo(updates, "1", "I1")
+    expectNoUpdate(updates, "0")
 
-    expect.strictEqual(updates["2"], "I3")
-    expect.strictEqual(typeof updates["1"], "undefined")
-    expect.strictEqual(typeof updates["0"], "undefined")
-    
-    updates = archipelago.setPeerPosition("3", [50, 0, 0])
+    updates = archipelago.setPeersPositions({ id: "2", position: [100, 0, 0] })
 
-    expect.strictEqual(updates["2"], "I1")
-    expect.strictEqual(updates["3"], "I1")
-    expect.strictEqual(typeof updates["1"], "undefined")
-    expect.strictEqual(typeof updates["0"], "undefined")
+    expectChangedTo(updates, "2", "I3")
+    expectNoUpdate(updates, "1")
+    expectNoUpdate(updates, "0")
+
+    updates = archipelago.setPeersPositions({ id: "3", position: [50, 0, 0] })
+
+    expectChangedTo(updates, "2", "I1")
+    expectChangedTo(updates, "3", "I1")
+    expectNoUpdate(updates, "1")
+    expectNoUpdate(updates, "0")
   })
 
   it("provides updates when clearing peer", () => {
@@ -150,11 +160,10 @@ describe("archipelago", () => {
 
     expectIslandsWith(archipelago, ["1", "2", "3"])
 
-    const [cleared, updates] = archipelago.clearPeer("2")
+    const updates = archipelago.clearPeers("2")
 
-    expect(cleared)
-
-    expect.strictEqual(updates["3"], "I4")
-    expect.strictEqual(typeof updates["1"], "undefined")
+    expectLeft(updates, "2", "I1")
+    expectChangedTo(updates, "3", "I4")
+    expectNoUpdate(updates, "1")
   })
 })

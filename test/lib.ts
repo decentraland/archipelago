@@ -37,9 +37,7 @@ export function configureLibs(closure: BaseClosure) {
   // (move ...[peer x y z])
   closure.defJsFunction("move", (...args: [string, number, number, number][]) => {
     const archipelago = closure.get("archipelago") as Archipelago
-    for (let arg of args) {
-      archipelago.setPeerPosition(arg[0], arg.slice(1) as any)
-    }
+    archipelago.setPeersPositions(...args.map(([id, ...position]) => ({ id, position })))
   })
 
   // (getIslands archipelago?)
@@ -71,9 +69,10 @@ export function configureLibs(closure: BaseClosure) {
   closure.defJsFunction("disconnect", (ids, arch) => {
     const archipelago = (arch || closure.get("archipelago")) as Archipelago
     if (typeof ids == "string") {
-      assert(archipelago.clearPeer(ids)[0], `Peer ${ids} must be deleted`)
+      assert(archipelago.clearPeers(ids)[ids].action === "leave", `Peer ${ids} must be deleted`)
     } else if (Array.isArray(ids)) {
-      ids.forEach(($: any) => assert(archipelago.clearPeer($)[0], `Peer ${$} must be deleted`))
+      const updates = archipelago.clearPeers(...ids)
+      ids.forEach(($: any) => assert(updates[$].action === "leave", `Peer ${$} must be deleted`))
     } else throw new Error("Invalid argument")
   })
 

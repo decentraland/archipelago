@@ -49,3 +49,13 @@ export function popMax<T>(array: T[], criteria: (t: T) => number) {
 export function popFirstByOrder<T>(array: T[], ordering: (t1: T, t2: T) => number) {
   return popIndex(array, findIndexOfFirstByOrder(array, ordering))
 }
+
+export function isEmpty(obj: Record<any, any>) {
+  for (var prop in obj) {
+    if (obj.hasOwnProperty(prop)) {
+      return false
+    }
+  }
+
+  return JSON.stringify(obj) === JSON.stringify({})
+}

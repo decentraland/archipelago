@@ -1,6 +1,14 @@
 import { sequentialIdGenerator } from "./idGenerator"
-import { Island, Archipelago, Position3D, PeerData, ArchipelagoOptions, IslandUpdates } from "./interfaces"
-import { popFirstByOrder, popMax } from "./utils"
+import {
+  Island,
+  Archipelago,
+  Position3D,
+  PeerData,
+  ArchipelagoOptions,
+  IslandUpdates,
+  PeerPositionChange,
+} from "./interfaces"
+import { isEmpty, popFirstByOrder, popMax } from "./utils"
 
 type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
@@ -45,28 +53,39 @@ class ArchipelagoImpl implements Archipelago {
   /**
    * This returns a map containing the peers that changed island as keys, and to which island they went as values
    * */
-  setPeerPosition(id: string, position: Position3D): IslandUpdates {
+  setPeersPositions(...changes: PeerPositionChange[]): IslandUpdates {
     let updates: IslandUpdates = {}
-    if (!this.peers.has(id)) {
-      this.peers.set(id, { id, position })
-      updates = this.createIsland([this.peers.get(id)!])
-    } else {
-      this.peers.get(id)!.position = position
+    for (const { id, position } of changes) {
+      if (!this.peers.has(id)) {
+        this.peers.set(id, { id, position })
+        updates[id] = this.createIsland([this.peers.get(id)!])[id]
+      } else {
+        this.peers.get(id)!.position = position
+      }
     }
+
     return { ...updates, ...this.updateIslands() }
   }
 
-  clearPeer(id: string): [boolean, IslandUpdates] {
-    const peer = this.peers.get(id)
-    if (peer) {
-      this.peers.delete(id)
-      if (peer.islandId) {
-        this.clearPeerFromIsland(id, this.islands.get(peer.islandId)!)
-      }
+  clearPeers(...ids: string[]): IslandUpdates {
+    let updates: IslandUpdates = {}
 
-      return [true, this.updateIslands()]
+    for (const id of ids) {
+      const peer = this.peers.get(id)
+      if (peer) {
+        this.peers.delete(id)
+        if (peer.islandId) {
+          this.clearPeerFromIsland(id, this.islands.get(peer.islandId)!)
+          updates[peer.id] = { action: "leave", islandId: peer.islandId }
+        }
+      }
     }
-    return [false, {}]
+
+    if (!isEmpty(updates)) {
+      return { ...updates, ...this.updateIslands() }
+    }
+
+    return updates
   }
 
   clearPeerFromIsland(id: string, island: Island) {
@@ -204,7 +223,7 @@ class ArchipelagoImpl implements Archipelago {
 
     for (const peer of peers) {
       peer.islandId = islandId
-      updates[peer.id] = islandId
+      updates[peer.id] = { action: "changeTo", islandId }
     }
 
     return updates

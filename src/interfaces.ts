@@ -15,15 +15,22 @@ export type Island = {
   sequenceId: number
 }
 
+export type PeerPositionChange = { id: string; position: Position3D }
+
 export interface Archipelago {
   getOptions(): ArchipelagoOptions
-  setPeerPosition(id: string, position: Position3D): IslandUpdates
+  setPeersPositions(...requests: PeerPositionChange[]): IslandUpdates
   getIslands(): Island[]
   getIsland(id: string): Island | undefined
-  clearPeer(id: string): [boolean, IslandUpdates]
+  clearPeers(...ids: string[]): IslandUpdates
 }
 
-export type IslandUpdates = Record<string, string>
+export type IslandUpdate = {
+  action: 'leave' | 'changeTo'
+  islandId: string
+}
+
+export type IslandUpdates = Record<string, IslandUpdate>
 
 export type ArchipelagoOptions = {
   maxPeersPerIsland: number
