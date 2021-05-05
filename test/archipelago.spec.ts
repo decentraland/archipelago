@@ -122,4 +122,39 @@ describe("archipelago", () => {
 
     expectIslandsWith(archipelago, ["1"])
   })
+
+  it("provides updates when setting positions", () => {
+    let updates = archipelago.setPeerPosition("0", [15, 0, 0])
+    
+    expect.strictEqual(updates["0"], "I1")
+    updates = archipelago.setPeerPosition("1", [0, 0, 0])
+    expect.strictEqual(updates["1"], "I1")
+    expect.strictEqual(typeof updates["0"], "undefined")
+
+    updates = archipelago.setPeerPosition("2", [100, 0, 0])
+
+    expect.strictEqual(updates["2"], "I3")
+    expect.strictEqual(typeof updates["1"], "undefined")
+    expect.strictEqual(typeof updates["0"], "undefined")
+    
+    updates = archipelago.setPeerPosition("3", [50, 0, 0])
+
+    expect.strictEqual(updates["2"], "I1")
+    expect.strictEqual(updates["3"], "I1")
+    expect.strictEqual(typeof updates["1"], "undefined")
+    expect.strictEqual(typeof updates["0"], "undefined")
+  })
+
+  it("provides updates when clearing peer", () => {
+    setPositions(["1", 0, 0, 0], ["2", 50, 0, 0], ["3", 100, 0, 0])
+
+    expectIslandsWith(archipelago, ["1", "2", "3"])
+
+    const [cleared, updates] = archipelago.clearPeer("2")
+
+    expect(cleared)
+
+    expect.strictEqual(updates["3"], "I4")
+    expect.strictEqual(typeof updates["1"], "undefined")
+  })
 })

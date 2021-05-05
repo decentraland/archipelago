@@ -71,9 +71,9 @@ export function configureLibs(closure: BaseClosure) {
   closure.defJsFunction("disconnect", (ids, arch) => {
     const archipelago = (arch || closure.get("archipelago")) as Archipelago
     if (typeof ids == "string") {
-      assert(archipelago.clearPeer(ids), `Peer ${ids} must be deleted`)
+      assert(archipelago.clearPeer(ids)[0], `Peer ${ids} must be deleted`)
     } else if (Array.isArray(ids)) {
-      ids.forEach(($: any) => assert(archipelago.clearPeer($), `Peer ${$} must be deleted`))
+      ids.forEach(($: any) => assert(archipelago.clearPeer($)[0], `Peer ${$} must be deleted`))
     } else throw new Error("Invalid argument")
   })
 
