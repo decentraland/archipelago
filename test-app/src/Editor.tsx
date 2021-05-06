@@ -131,23 +131,25 @@ export function Editor(props: {}) {
       const width = svg.node()!.clientWidth
       const margin = { top: 30, right: 30, bottom: 30, left: 30 }
 
+      const maxValue = Math.max(...data.flatMap((d) => [d.y + 10, d.x + 10]))
+
       const x = d3
         .scaleLinear()
-        .domain([Math.min(...data.map((d) => d.x - 10)), Math.max(...data.map((d) => d.x + 10))])
+        .domain([Math.min(...data.map((d) => d.x - 10)), maxValue])
         .rangeRound([margin.left, width - margin.right])
 
       // Add Y axis
       const y = d3
         .scaleLinear()
-        .domain([Math.min(...data.map((d) => d.y - 10)), Math.max(...data.map((d) => d.y + 10))])
+        .domain([Math.min(...data.map((d) => d.y - 10)), maxValue])
         .rangeRound([height - margin.bottom, margin.top])
 
-      const maxValue = Math.abs(x.domain()[1] - x.domain()[0])
+      const maxRadiusValue = Math.abs(x.domain()[1] - x.domain()[0])
       const maxScaled = Math.abs(x.range()[1] - x.range()[0])
 
       console.log("MAX SCALED " + maxScaled)
 
-      const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, maxScaled])
+      const radiusScale = d3.scaleLinear().domain([0, maxRadiusValue]).range([0, maxScaled])
 
       svg
         .select<SVGGElement>(".x-axis")
@@ -161,7 +163,7 @@ export function Editor(props: {}) {
         g
           .attr("transform", `translate(${margin.left},0)`)
           .style("color", "steelblue")
-          .call(d3.axisLeft(y).ticks(null, "s"))
+          .call(d3.axisLeft(y).ticks(20).tickSizeOuter(0))
           .call((g) => g.select(".domain").remove())
           .call((g) =>
             g

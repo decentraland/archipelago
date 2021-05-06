@@ -8,6 +8,7 @@
     "types": [
       "node"
     ],
+    "lib": ["ES2020"],
     "strict": true,
     "outDir": "./dist", /* Redirect output structure to the directory. */
     "esModuleInterop": true, /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
