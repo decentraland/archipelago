@@ -284,6 +284,32 @@ export function Editor(props: {}) {
           return d.island + ": " + d.peerId
         })
 
+      const d3dataleaveradius = svg
+        .select(".plot-area")
+        .selectAll(".leaveRadius")
+        .data(data, function (d: any) {
+          return d.peerId
+        })
+
+      d3dataleaveradius
+        .enter()
+        .append("circle")
+        .attr("class", (d) => "leaveRadius")
+        .style("fill", (d) => makeTransparent(color(d.island) as string))
+        .attr("cx", (d) => x(d.x))
+        .attr("cy", (d) => y(d.y))
+        .attr("r", (d) => radiusScale(d.leaveRadius))
+        .lower()
+
+      d3dataleaveradius
+        .transition()
+        .duration(ANIM_DURATION)
+        .attr("cx", (d) => x(d.x))
+        .attr("cy", (d) => y(d.y))
+        .attr("r", (d) => radiusScale(d.leaveRadius))
+
+      d3dataleaveradius.exit().remove()
+
       const d3dataradius = svg
         .select(".plot-area")
         .selectAll(".connectRadius")
@@ -296,6 +322,7 @@ export function Editor(props: {}) {
         .append("circle")
         .attr("class", (d) => "connectRadius")
         .style("fill", (d) => makeTransparent(color(d.island) as string))
+        .style("stroke", (d) => makeTransparent(color(d.island) as string, 0.5))
         .attr("cx", (d) => x(d.x))
         .attr("cy", (d) => y(d.y))
         .attr("r", (d) => radiusScale(d.joinRadius))
@@ -304,8 +331,6 @@ export function Editor(props: {}) {
       d3dataradius
         .transition()
         .duration(ANIM_DURATION)
-        .attr("class", (d) => "connectRadius")
-        .style("fill", (d) => makeTransparent(color(d.island) as string))
         .attr("cx", (d) => x(d.x))
         .attr("cy", (d) => y(d.y))
         .attr("r", (d) => radiusScale(d.joinRadius))
