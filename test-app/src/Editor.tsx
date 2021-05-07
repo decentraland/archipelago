@@ -304,6 +304,7 @@ export function Editor(props: {}) {
       d3dataleaveradius
         .transition()
         .duration(ANIM_DURATION)
+        .style("fill", (d) => makeTransparent(color(d.island) as string))
         .attr("cx", (d) => x(d.x))
         .attr("cy", (d) => y(d.y))
         .attr("r", (d) => radiusScale(d.leaveRadius))
@@ -331,6 +332,8 @@ export function Editor(props: {}) {
       d3dataradius
         .transition()
         .duration(ANIM_DURATION)
+        .style("fill", (d) => makeTransparent(color(d.island) as string))
+        .style("stroke", (d) => makeTransparent(color(d.island) as string, 0.5))
         .attr("cx", (d) => x(d.x))
         .attr("cy", (d) => y(d.y))
         .attr("r", (d) => radiusScale(d.joinRadius))
