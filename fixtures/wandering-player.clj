@@ -7,7 +7,7 @@
       ["2" 16 0 16]
       ["friend" 200 0 100]
       ["4" 300 0 200]
-      ["5" 320 0 200]
+      ["5" 330 0 200]
       ["6" 288 0 190])
 
 (move ["wanderer" 10 0 10])
@@ -41,3 +41,8 @@
 (move ["wanderer" 230 0 180] ["friend" 250 0 180])
 (expectIslandsWith [["1" "2"] ["wanderer" "friend" "4" "5" "6"]])
 
+(disconnect ["4" "6"])
+(expectIslandsWith [["1" "2"] ["wanderer" "friend"] ["5"]])
+
+(move ["wanderer" 250 0 180] ["friend" 270 0 180])
+(expectIslandsWith [["1" "2"] ["wanderer" "friend" "5"]])
