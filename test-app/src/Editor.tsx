@@ -67,7 +67,7 @@ export function Editor(props: {}) {
   const [readonly, setReadonly] = useState<boolean>(false)
   const [currentCode, setCurrentCode] = useState<string>("")
   const [runToLine, setRunToLine] = useState<number>(-1)
-  const [layerUrl, setLayerUrl] = useState("")
+  const [layerUrl, setLayerUrl] = useState("https://peer.decentraland.org/comms/layers/amber")
   const debouncedCode = useDebounce(currentCode, 300)
 
   useEffect(() => {
@@ -430,19 +430,13 @@ export function Editor(props: {}) {
         if (json.length > 0) {
           let codeToAppend = "\n\n(move\n"
 
-          function processNumber(positionNumber: number): string {
-            if (positionNumber >= 0) return `${positionNumber}`
-            else return `(- 0 ${-positionNumber})`
-          }
-
           for (const user of json) {
             if (user.position) {
-              codeToAppend += `      ["${user.id}" ${user.position.map((it: number) => processNumber(it)).join(" ")}]\n`
+              codeToAppend += `      ["${user.id}" ${user.position.join(" ")}]\n`
             }
           }
 
           codeToAppend += ")\n"
-
           editorRef.current.setValue(editorRef.current.getValue() + codeToAppend)
         }
       }
@@ -516,7 +510,7 @@ export function Editor(props: {}) {
             <input
               name="layer-url"
               type="text"
-              placeholder="Import Layer"
+              placeholder="Catalyst Layer URL"
               style={{ width: "400px" }}
               value={layerUrl}
               onChange={(ev) => setLayerUrl(ev.target.value)}
@@ -525,7 +519,7 @@ export function Editor(props: {}) {
               style={{ position: "relative", left: "-65px", width: "65px" }}
               onClick={() => importLayer(layerUrl)}
               disabled={!(files && selectedFile && files[selectedFile] && layerUrl)}
-            >r
+            >
               Import
             </button>
           </div>
