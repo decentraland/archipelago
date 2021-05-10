@@ -67,6 +67,7 @@ export function Editor(props: {}) {
   const [readonly, setReadonly] = useState<boolean>(false)
   const [currentCode, setCurrentCode] = useState<string>("")
   const [runToLine, setRunToLine] = useState<number>(-1)
+  const [layerUrl, setLayerUrl] = useState("")
   const debouncedCode = useDebounce(currentCode, 300)
 
   useEffect(() => {
@@ -419,6 +420,35 @@ export function Editor(props: {}) {
     }
   }
 
+  async function importLayer(layerUrl: string) {
+    if (editorRef.current) {
+      const response = await fetch(`${layerUrl}/users`)
+
+      if (response.ok) {
+        const json = await response.json()
+
+        if (json.length > 0) {
+          let codeToAppend = "\n\n(move\n"
+
+          function processNumber(positionNumber: number): string {
+            if (positionNumber >= 0) return `${positionNumber}`
+            else return `(- 0 ${-positionNumber})`
+          }
+
+          for (const user of json) {
+            if (user.position) {
+              codeToAppend += `      ["${user.id}" ${user.position.map((it: number) => processNumber(it)).join(" ")}]\n`
+            }
+          }
+
+          codeToAppend += ")\n"
+
+          editorRef.current.setValue(editorRef.current.getValue() + codeToAppend)
+        }
+      }
+    }
+  }
+
   return (
     <div>
       <div className="editor" style={{ width: size }}>
@@ -481,6 +511,22 @@ export function Editor(props: {}) {
           <div>
             <button className="" onClick={() => setRunToLine(0)}>
               Run all
+            </button>
+            <span> | </span>
+            <input
+              name="layer-url"
+              type="text"
+              placeholder="Import Layer"
+              style={{ width: "400px" }}
+              value={layerUrl}
+              onChange={(ev) => setLayerUrl(ev.target.value)}
+            ></input>
+            <button
+              style={{ position: "relative", left: "-65px", width: "65px" }}
+              onClick={() => importLayer(layerUrl)}
+              disabled={!(files && selectedFile && files[selectedFile] && layerUrl)}
+            >r
+              Import
             </button>
           </div>
           <div className="p-2 d-flex" style={{ alignItems: "center" }}>
