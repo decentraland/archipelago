@@ -51,14 +51,14 @@ export function Visualizer({ renderState }: { renderState: Archipelago | null })
           })
         })
 
-        const centerX = island.peers.slice(1).reduce((a, b) => b.position[0] + a, island.peers[0].position[0])
-        const centerY = island.peers.slice(1).reduce((a, b) => b.position[0] + a, island.peers[0].position[0])
+        // const centerX = island.peers.slice(1).reduce((a, b) => b.position[0] + a, island.peers[0].position[0])
+        // const centerY = island.peers.slice(1).reduce((a, b) => b.position[0] + a, island.peers[0].position[0])
 
-        islandsData.push({
-          x: centerX / island.peers.length,
-          y: centerY / island.peers.length,
-          island: island.id,
-        })
+        // islandsData.push({
+        //   x: centerX / island.peers.length,
+        //   y: centerY / island.peers.length,
+        //   island: island.id,
+        // })
       })
 
       // set the dimensions and margins of the graph
@@ -66,17 +66,23 @@ export function Visualizer({ renderState }: { renderState: Archipelago | null })
       const width = svg.node()!.clientWidth
       const margin = { top: 30, right: 30, bottom: 30, left: 30 }
 
-      const maxValue = Math.max(...data.flatMap((d) => [d.y + 10, d.x + 10]))
+      const minXValue = Math.min(...data.map((d) => d.x - 10))
+      const minYValue = Math.min(...data.map((d) => d.y - 10))
+
+      const maxXValue = Math.max(...data.map((d) => d.x + 10))
+      const maxYValue = Math.max(...data.map((d) => d.y + 10))
+
+      const maxDiff = Math.max(maxXValue - minXValue, maxYValue - minYValue)
 
       const x = d3
         .scaleLinear()
-        .domain([Math.min(...data.map((d) => d.x - 10)), maxValue])
+        .domain([minXValue, minXValue + maxDiff])
         .rangeRound([margin.left, width - margin.right])
 
       // Add Y axis
       const y = d3
         .scaleLinear()
-        .domain([Math.min(...data.map((d) => d.y - 10)), maxValue])
+        .domain([minYValue, minYValue + maxDiff])
         .rangeRound([height - margin.bottom, margin.top])
 
       const maxRadiusValue = Math.abs(x.domain()[1] - x.domain()[0])
@@ -143,12 +149,12 @@ export function Visualizer({ renderState }: { renderState: Archipelago | null })
           return d.peerId
         })
 
-      const svgIslands = svg
-        .select(".plot-area")
-        .selectAll(".island")
-        .data(islandsData, function (d: any) {
-          return d.island
-        })
+      // const svgIslands = svg
+      //   .select(".plot-area")
+      //   .selectAll(".island")
+      //   .data(islandsData, function (d: any) {
+      //     return d.island
+      //   })
 
       const svgPointLabels = svg
         .select(".plot-area")
@@ -157,26 +163,26 @@ export function Visualizer({ renderState }: { renderState: Archipelago | null })
           return d.peerId
         })
 
-      svgIslands
-        .enter()
-        .append("rect")
-        .attr("class", (d) => "island")
-        .attr("x", (d) => x(d.x) - 2)
-        .attr("y", (d) => y(d.y) - 2)
-        .attr("width", (d) => 5)
-        .attr("height", (d) => 5)
+      // svgIslands
+      //   .enter()
+      //   .append("rect")
+      //   .attr("class", (d) => "island")
+      //   .attr("x", (d) => x(d.x) - 2)
+      //   .attr("y", (d) => y(d.y) - 2)
+      //   .attr("width", (d) => 5)
+      //   .attr("height", (d) => 5)
 
-        .on("mouseover", highlight)
-        .on("mouseleave", doNotHighlight)
+      //   .on("mouseover", highlight)
+      //   .on("mouseleave", doNotHighlight)
 
-      svgIslands.exit().remove()
+      // svgIslands.exit().remove()
 
-      svgIslands
-        .transition()
-        .duration(ANIM_DURATION)
-        .attr("class", (d) => "dot " + d.island)
-        .attr("x", (d) => x(d.x) - 2)
-        .attr("y", (d) => y(d.y) - 2)
+      // svgIslands
+      //   .transition()
+      //   .duration(ANIM_DURATION)
+      //   .attr("class", (d) => "dot " + d.island)
+      //   .attr("x", (d) => x(d.x) - 2)
+      //   .attr("y", (d) => y(d.y) - 2)
 
       svgPoints
         .enter()
