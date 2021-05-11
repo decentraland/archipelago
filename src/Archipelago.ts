@@ -8,13 +8,21 @@ import {
   IslandUpdates,
   PeerPositionChange,
 } from "./interfaces"
-import { isEmpty, popFirstByOrder, popMax } from "./utils"
+import { findMax, isEmpty, popFirstByOrder, popMax } from "./utils"
 
 type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
 const X_AXIS = 0
 const Y_AXIS = 1
 const Z_AXIS = 2
+
+const defaultDistanceFunction = (p1: Position3D, p2: Position3D) => {
+  // By default, we use XZ plane squared distance. We ignore "height"
+  const xDiff = p2[X_AXIS] - p1[X_AXIS]
+  const zDiff = p2[Z_AXIS] - p1[Z_AXIS]
+
+  return xDiff * xDiff + zDiff * zDiff
+}
 
 function defaultOptions() {
   return {
@@ -25,6 +33,24 @@ function defaultOptions() {
       const zDiff = p2[Z_AXIS] - p1[Z_AXIS]
 
       return xDiff * xDiff + zDiff * zDiff
+    },
+    islandGeometryCalculator: (peers: PeerData[], joinDistance: number): [Position3D, number] => {
+      if (peers.length === 0) return [[0, 0, 0], 0]
+      const sum = peers.reduce<Position3D>(
+        (current, peer) => [
+          current[X_AXIS] + peer.position[X_AXIS],
+          current[Y_AXIS] + peer.position[Y_AXIS],
+          current[Z_AXIS] + peer.position[Z_AXIS],
+        ],
+        [0, 0, 0]
+      )
+
+      const center = sum.map((it) => it / peers.length) as Position3D
+      const farthest = findMax(peers, (peer) => defaultDistanceFunction(peer.position, center))!
+
+      const radius = defaultDistanceFunction(farthest.position, center) + joinDistance
+
+      return [center, radius]
     },
     islandIdGenerator: sequentialIdGenerator("I"),
   }
@@ -60,7 +86,12 @@ class ArchipelagoImpl implements Archipelago {
         this.peers.set(id, { id, position })
         updates[id] = this.createIsland([this.peers.get(id)!])[id]
       } else {
-        this.peers.get(id)!.position = position
+        const peer = this.peers.get(id)!
+        peer.position = position
+        if (peer.islandId) {
+          const island = this.getIsland(peer.islandId)!
+          this.recalculateGeometry(island)
+        }
       }
     }
 
@@ -97,6 +128,8 @@ class ArchipelagoImpl implements Archipelago {
     if (island.peers.length === 0) {
       this.islands.delete(island.id)
     }
+
+    this.recalculateGeometry(island)
   }
 
   updateIslands(): IslandUpdates {
@@ -162,6 +195,7 @@ class ArchipelagoImpl implements Archipelago {
     } else {
       const biggestGroup = popMax(peerGroups, (group) => group.length)!
       island.peers = biggestGroup
+      this.recalculateGeometry(island)
       return peerGroups.reduce((updates, group) => ({ ...updates, ...this.createIsland(group) }), {})
     }
   }
@@ -183,6 +217,8 @@ class ArchipelagoImpl implements Archipelago {
       this.islands.delete(anIsland.id)
     }
 
+    this.recalculateGeometry(biggest)
+
     return [biggest, updates]
   }
 
@@ -200,17 +236,28 @@ class ArchipelagoImpl implements Archipelago {
 
   addPeersToIsland(island: Island, peers: PeerData[]): IslandUpdates {
     island.peers.push(...peers)
+    this.recalculateGeometry(island)
     return this.setPeersIsland(island.id, peers)
+  }
+
+  recalculateGeometry(island: Island) {
+    const [center, radius] = this.options.islandGeometryCalculator(island.peers, this.options.joinDistance)
+    island.center = center
+    island.radius = radius
   }
 
   createIsland(group: PeerData[]): IslandUpdates {
     const newIslandId = this.generateId()
+
+    const [center, radius] = this.options.islandGeometryCalculator(group, this.options.joinDistance)
 
     const island = {
       id: newIslandId,
       peers: group,
       maxPeers: this.options.maxPeersPerIsland,
       sequenceId: ++this.currentSequence,
+      center,
+      radius,
     }
 
     this.islands.set(newIslandId, island)
