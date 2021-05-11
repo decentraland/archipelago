@@ -236,6 +236,10 @@ class ArchipelagoImpl implements Archipelago {
   getIsland(id: string): Island | undefined {
     return this.islands.get(id)
   }
+
+  getPeersCount(): number {
+    return this.peers.size
+  }
 }
 
 export function defaultArchipelago(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>): Archipelago {

@@ -12,6 +12,7 @@ export type Island = {
   id: string
   peers: PeerData[]
   maxPeers: number
+  center?: Position3D
   sequenceId: number
 }
 
@@ -23,6 +24,7 @@ export interface Archipelago {
   getIslands(): Island[]
   getIsland(id: string): Island | undefined
   clearPeers(...ids: string[]): IslandUpdates
+  getPeersCount() : number
 }
 
 export type IslandUpdate = {
