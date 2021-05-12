@@ -41,5 +41,4 @@ export type ArchipelagoOptions = {
   leaveDistance: number
   distanceFunction: (a: Position3D, b: Position3D) => number
   islandIdGenerator: IdGenerator
-  islandGeometryCalculator: (peers: PeerData[], joinDistance: number) => [Position3D, number]
 }

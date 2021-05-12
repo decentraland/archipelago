@@ -173,7 +173,7 @@ describe("archipelago", () => {
     const island = archipelago.getIslands()[0]
 
     expect.deepStrictEqual(island.center, [20, 0, 20])
-    expect.strictEqual(island.radius, 4896) // Distance between center and peers + join radius
+    expect(Math.abs(island.radius - Math.sqrt(800)) < 0.0000001) // Distance between center and farthest peer
   })
 
 
@@ -183,6 +183,6 @@ describe("archipelago", () => {
     const island = archipelago.getIslands()[0]
 
     expect.deepStrictEqual(island.center, [14, 0, 14])
-    expect.strictEqual(island.radius, 5448)
+    expect(Math.abs(island.radius - Math.sqrt(1352)) < 0.0000001)
   })
 })
