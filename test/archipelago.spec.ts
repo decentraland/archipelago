@@ -166,4 +166,23 @@ describe("archipelago", () => {
     expectChangedTo(updates, "3", "I4")
     expectNoUpdate(updates, "1")
   })
+
+  it("calculates island geometry", () => {
+    setPositions(["1", 0, 0, 0], ["2", 40, 0, 40])
+
+    const island = archipelago.getIslands()[0]
+
+    expect.deepStrictEqual(island.center, [20, 0, 20])
+    expect.strictEqual(island.radius, 4896) // Distance between center and peers + join radius
+  })
+
+
+  it("sets radius to encompass all peers", () => {
+    setPositions(["1", 0, 0, 0], ["2", 10, 0, 10], ["3", 6, 0, 6], ["4", 40, 0, 40])
+
+    const island = archipelago.getIslands()[0]
+
+    expect.deepStrictEqual(island.center, [14, 0, 14])
+    expect.strictEqual(island.radius, 5448)
+  })
 })
