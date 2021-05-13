@@ -247,7 +247,7 @@ class ArchipelagoImpl implements Archipelago {
   intersectIslandGeometry(anIsland: InternalIsland, otherIsland: InternalIsland, intersectDistance: number) {
     return (
       squaredDistance(anIsland.center, otherIsland.center) <=
-      squared(anIsland.radius + otherIsland.radius + squared(intersectDistance))
+      squared(anIsland.radius + otherIsland.radius + intersectDistance)
     )
   }
 
