@@ -99,6 +99,7 @@ Last second: ${currentCycleOperations} ops. ${(
         (Date.now() - currentCycleStartTime)
       ).toFixed(2)} avg ops/s
 Number of peers: ${archipelago.getPeersCount()}
+Number of islands: ${archipelago.getIslandsCount()}
 Elapsed: ${elapsed / 1000}s. Remaining: ${DURATION - elapsed / 1000}s
       `
     )

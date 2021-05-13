@@ -25,6 +25,7 @@ export interface Archipelago {
   getIsland(id: string): Island | undefined
   clearPeers(...ids: string[]): IslandUpdates
   getPeersCount() : number
+  getIslandsCount() : number
 }
 
 export type IslandUpdate = {
