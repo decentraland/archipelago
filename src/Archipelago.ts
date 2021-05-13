@@ -167,7 +167,7 @@ class ArchipelagoImpl implements Archipelago {
       if (!processedIslands[islandId] && this.islands.has(islandId)) {
         const island = this.getIsland(islandId)!
         const islandsIntersected: InternalIsland[] = []
-        for (const otherIsland of this.islands.values()) {
+        for (const [, otherIsland] of this.islands) {
           if (islandId !== otherIsland.id && this.intersectIslands(island, otherIsland, this.options.joinDistance)) {
             islandsIntersected.push(otherIsland)
             processedIslands[islandId] = true
