@@ -8,8 +8,7 @@ type PositionWithId = [string, number, number, number]
 describe("archipelago", () => {
   let archipelago: Archipelago
   beforeEach(() => {
-    // Distances are squared. We may want to make the interface so we don't have to consider that
-    archipelago = defaultArchipelago({ joinDistance: 64 * 64, leaveDistance: 80 * 80 })
+    archipelago = defaultArchipelago({ joinDistance: 64, leaveDistance: 80 })
   })
 
   function setPositions(...positions: PositionWithId[]) {

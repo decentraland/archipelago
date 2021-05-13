@@ -8,7 +8,7 @@ import {
   PeerPositionChange,
   Island,
 } from "./interfaces"
-import { findMax, isEmpty, popFirstByOrder, popMax } from "./utils"
+import { findMax, popFirstByOrder, popMax } from "./utils"
 
 type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
@@ -16,7 +16,7 @@ const X_AXIS = 0
 const Y_AXIS = 1
 const Z_AXIS = 2
 
-const defaultDistanceFunction = (p1: Position3D, p2: Position3D) => {
+const squaredDistance = (p1: Position3D, p2: Position3D) => {
   // By default, we use XZ plane squared distance. We ignore "height"
   const xDiff = p2[X_AXIS] - p1[X_AXIS]
   const zDiff = p2[Z_AXIS] - p1[Z_AXIS]
@@ -27,7 +27,6 @@ const defaultDistanceFunction = (p1: Position3D, p2: Position3D) => {
 function defaultOptions() {
   return {
     maxPeersPerIsland: 200,
-    distanceFunction: defaultDistanceFunction,
     islandIdGenerator: sequentialIdGenerator("I"),
   }
 }
@@ -40,9 +39,9 @@ function islandGeometryCalculator(peers: PeerData[]): [Position3D, number] {
   )
 
   const center = sum.map((it) => it / peers.length) as Position3D
-  const farthest = findMax(peers, (peer) => defaultDistanceFunction(peer.position, center))!
+  const farthest = findMax(peers, (peer) => squaredDistance(peer.position, center))!
 
-  const radius = Math.sqrt(defaultDistanceFunction(farthest.position, center))
+  const radius = Math.sqrt(squaredDistance(farthest.position, center))
 
   return [center, radius]
 }
@@ -79,7 +78,7 @@ class ArchipelagoImpl implements Archipelago {
   }
 
   /**
-   * This returns a map containing the peers that changed island as keys, and to which island they went as values
+   * This returns a map containing the peers that left or changed island as keys, how they changed as values
    * */
   setPeersPositions(...changes: PeerPositionChange[]): IslandUpdates {
     let updates: IslandUpdates = {}
@@ -108,6 +107,7 @@ class ArchipelagoImpl implements Archipelago {
     const affectedIslands: Set<string> = new Set()
     for (const id of ids) {
       const peer = this.peers.get(id)
+
       if (peer) {
         this.peers.delete(id)
         if (peer.islandId) {
@@ -174,7 +174,7 @@ class ArchipelagoImpl implements Archipelago {
           }
         }
         if (islandsIntersected.length > 0) {
-          const [merged, mergeUpdates] = this.mergeIslands(island, ...islandsIntersected)
+          const [, mergeUpdates] = this.mergeIslands(island, ...islandsIntersected)
           updates = { ...updates, ...mergeUpdates }
         }
       }
@@ -246,8 +246,8 @@ class ArchipelagoImpl implements Archipelago {
 
   intersectIslandGeometry(anIsland: InternalIsland, otherIsland: InternalIsland, intersectDistance: number) {
     return (
-      defaultDistanceFunction(anIsland.center, otherIsland.center) <
-      squared(anIsland.radius + otherIsland.radius + Math.sqrt(intersectDistance))
+      squaredDistance(anIsland.center, otherIsland.center) <=
+      squared(anIsland.radius + otherIsland.radius + squared(intersectDistance))
     )
   }
 
@@ -256,7 +256,7 @@ class ArchipelagoImpl implements Archipelago {
   }
 
   intersectPeers(aPeer: PeerData, otherPeer: PeerData, intersectDistance: number) {
-    return this.options.distanceFunction(aPeer.position, otherPeer.position) <= intersectDistance
+    return squaredDistance(aPeer.position, otherPeer.position) <= squared(intersectDistance)
   }
 
   addPeersToIsland(island: InternalIsland, peers: PeerData[]): IslandUpdates {

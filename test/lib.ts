@@ -5,6 +5,8 @@ import assert from "assert"
 import get from "lodash.get"
 import deepEqual from "fast-deep-equal"
 
+export const defaultArchipelagoOptions = { joinDistance: 64, leaveDistance: 80 }
+
 export function expectIslandWith(archipelago: Archipelago, ...ids: string[]) {
   assert(Array.isArray(ids))
   const sortedIds = ids.sort()
@@ -33,8 +35,8 @@ export function expectIslandsCount(archipelago: Archipelago, count: number) {
 }
 export function configureLibs(closure: BaseClosure) {
   // (configure { options })
-  closure.defJsFunction("configure", (options: ArchipelagoOptions) => {
-    closure.def("archipelago", defaultArchipelago(options))
+  closure.defJsFunction("configure", (options?: ArchipelagoOptions) => {
+    closure.def("archipelago", defaultArchipelago(options ?? defaultArchipelagoOptions))
   })
 
   // (move ...[peer x y z])
