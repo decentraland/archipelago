@@ -1,14 +1,14 @@
 import { sequentialIdGenerator } from "./idGenerator"
 import {
-  Island,
   Archipelago,
   Position3D,
   PeerData,
   ArchipelagoOptions,
   IslandUpdates,
   PeerPositionChange,
+  Island,
 } from "./interfaces"
-import { isEmpty, popFirstByOrder, popMax } from "./utils"
+import { findMax, popFirstByOrder, popMax } from "./utils"
 
 type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
@@ -16,23 +16,50 @@ const X_AXIS = 0
 const Y_AXIS = 1
 const Z_AXIS = 2
 
+const squaredDistance = (p1: Position3D, p2: Position3D) => {
+  // By default, we use XZ plane squared distance. We ignore "height"
+  const xDiff = p2[X_AXIS] - p1[X_AXIS]
+  const zDiff = p2[Z_AXIS] - p1[Z_AXIS]
+
+  return xDiff * xDiff + zDiff * zDiff
+}
+
 function defaultOptions() {
   return {
     maxPeersPerIsland: 200,
-    distanceFunction: (p1: Position3D, p2: Position3D) => {
-      // By default, we use XZ plane squared distance. We ignore "height"
-      const xDiff = p2[X_AXIS] - p1[X_AXIS]
-      const zDiff = p2[Z_AXIS] - p1[Z_AXIS]
-
-      return xDiff * xDiff + zDiff * zDiff
-    },
     islandIdGenerator: sequentialIdGenerator("I"),
   }
 }
 
+function islandGeometryCalculator(peers: PeerData[]): [Position3D, number] {
+  if (peers.length === 0) return [[0, 0, 0], 0]
+  const sum = peers.reduce<Position3D>(
+    (current, peer) => [current[X_AXIS] + peer.position[X_AXIS], 0, current[Z_AXIS] + peer.position[Z_AXIS]],
+    [0, 0, 0]
+  )
+
+  const center = sum.map((it) => it / peers.length) as Position3D
+  const farthest = findMax(peers, (peer) => squaredDistance(peer.position, center))!
+
+  const radius = Math.sqrt(squaredDistance(farthest.position, center))
+
+  return [center, radius]
+}
+
+function squared(n: number) {
+  return n * n
+}
+
+type InternalIsland = Island & {
+  _center?: Position3D
+  _radius?: number
+  _geometryDirty: boolean
+  _recalculateGeometryIfNeeded: () => void
+}
+
 class ArchipelagoImpl implements Archipelago {
   private peers: Map<string, PeerData> = new Map()
-  private islands: Map<string, Island> = new Map()
+  private islands: Map<string, InternalIsland> = new Map()
 
   private options: ArchipelagoOptions
 
@@ -51,44 +78,54 @@ class ArchipelagoImpl implements Archipelago {
   }
 
   /**
-   * This returns a map containing the peers that changed island as keys, and to which island they went as values
+   * This returns a map containing the peers that left or changed island as keys, how they changed as values
    * */
   setPeersPositions(...changes: PeerPositionChange[]): IslandUpdates {
     let updates: IslandUpdates = {}
+    const affectedIslands: Set<string> = new Set()
     for (const { id, position } of changes) {
       if (!this.peers.has(id)) {
         this.peers.set(id, { id, position })
         updates[id] = this.createIsland([this.peers.get(id)!])[id]
+        affectedIslands.add(updates[id].islandId)
       } else {
-        this.peers.get(id)!.position = position
+        const peer = this.peers.get(id)!
+        peer.position = position
+        if (peer.islandId) {
+          const island = this.getIsland(peer.islandId)!
+          this.markGeometryDirty(island)
+          affectedIslands.add(peer.islandId)
+        }
       }
     }
 
-    return { ...updates, ...this.updateIslands() }
+    return this.updateIslands(updates, affectedIslands)
   }
 
   clearPeers(...ids: string[]): IslandUpdates {
     let updates: IslandUpdates = {}
-
+    const affectedIslands: Set<string> = new Set()
     for (const id of ids) {
       const peer = this.peers.get(id)
+
       if (peer) {
         this.peers.delete(id)
         if (peer.islandId) {
           this.clearPeerFromIsland(id, this.islands.get(peer.islandId)!)
           updates[peer.id] = { action: "leave", islandId: peer.islandId }
+          if (this.islands.has(peer.islandId)) {
+            affectedIslands.add(peer.islandId)
+          } else {
+            affectedIslands.delete(peer.islandId)
+          }
         }
       }
     }
 
-    if (!isEmpty(updates)) {
-      return { ...updates, ...this.updateIslands() }
-    }
-
-    return updates
+    return this.updateIslands(updates, affectedIslands)
   }
 
-  clearPeerFromIsland(id: string, island: Island) {
+  clearPeerFromIsland(id: string, island: InternalIsland) {
     const idx = island.peers.findIndex((it) => it.id === id)
     if (idx >= 0) {
       island.peers.splice(idx, 1)
@@ -97,45 +134,56 @@ class ArchipelagoImpl implements Archipelago {
     if (island.peers.length === 0) {
       this.islands.delete(island.id)
     }
+
+    this.markGeometryDirty(island)
   }
 
-  updateIslands(): IslandUpdates {
-    return { ...this.checkSplitIslands(), ...this.checkMergeIslands() }
+  updateIslands(previousUpdates: IslandUpdates, affectedIslands: Set<string>): IslandUpdates {
+    const splitUpdates = this.checkSplitIslands(previousUpdates, affectedIslands)
+    return this.checkMergeIslands(splitUpdates, affectedIslands)
   }
 
-  checkSplitIslands(): IslandUpdates {
-    let updates: IslandUpdates = {}
-    for (const island of this.islands.values()) {
-      updates = { ...updates, ...this.checkSplitIsland(island) }
-    }
-
-    return updates
-  }
-
-  checkMergeIslands(): IslandUpdates {
-    const processedIslands: Map<string, Island> = new Map()
-
-    let updates: IslandUpdates = {}
-
-    for (const island of this.islands.values()) {
-      const islandsIntersected = [...processedIslands.values()].filter((it) =>
-        this.intersectIslands(island, it, this.options.joinDistance)
-      )
-
-      if (islandsIntersected.length > 0) {
-        const [merged, mergeUpdates] = this.mergeIslands(island, ...islandsIntersected)
-        updates = { ...updates, ...mergeUpdates }
-        islandsIntersected.forEach((it) => processedIslands.delete(it.id))
-        processedIslands.set(merged.id, merged)
-      } else {
-        processedIslands.set(island.id, island)
+  checkSplitIslands(previousUpdates: IslandUpdates, affectedIslands: Set<string>): IslandUpdates {
+    let updates: IslandUpdates = previousUpdates
+    const processedIslands: Record<string, boolean> = {}
+    for (const islandId of [...affectedIslands]) {
+      if (!processedIslands[islandId]) {
+        const thisSplitUpdates = this.checkSplitIsland(this.getIsland(islandId)!)
+        Object.values(thisSplitUpdates).forEach((it) => affectedIslands.add(it.islandId))
+        updates = { ...updates, ...thisSplitUpdates }
+        processedIslands[islandId] = true
       }
     }
 
     return updates
   }
 
-  checkSplitIsland(island: Island): IslandUpdates {
+  checkMergeIslands(previousUpdates: IslandUpdates, affectedIslands: Set<string>): IslandUpdates {
+    const processedIslands: Record<string, boolean> = {}
+
+    let updates: IslandUpdates = previousUpdates
+
+    for (const islandId of affectedIslands) {
+      if (!processedIslands[islandId] && this.islands.has(islandId)) {
+        const island = this.getIsland(islandId)!
+        const islandsIntersected: InternalIsland[] = []
+        for (const otherIsland of this.islands.values()) {
+          if (islandId !== otherIsland.id && this.intersectIslands(island, otherIsland, this.options.joinDistance)) {
+            islandsIntersected.push(otherIsland)
+            processedIslands[islandId] = true
+          }
+        }
+        if (islandsIntersected.length > 0) {
+          const [, mergeUpdates] = this.mergeIslands(island, ...islandsIntersected)
+          updates = { ...updates, ...mergeUpdates }
+        }
+      }
+    }
+
+    return updates
+  }
+
+  checkSplitIsland(island: InternalIsland): IslandUpdates {
     const peerGroups: PeerData[][] = []
 
     for (const peer of island.peers) {
@@ -162,11 +210,12 @@ class ArchipelagoImpl implements Archipelago {
     } else {
       const biggestGroup = popMax(peerGroups, (group) => group.length)!
       island.peers = biggestGroup
+      this.markGeometryDirty(island)
       return peerGroups.reduce((updates, group) => ({ ...updates, ...this.createIsland(group) }), {})
     }
   }
 
-  mergeIslands(...islands: Island[]): [Island, IslandUpdates] {
+  mergeIslands(...islands: InternalIsland[]): [InternalIsland, IslandUpdates] {
     let updates: IslandUpdates = {}
 
     const biggest = popFirstByOrder(islands, (i1, i2) =>
@@ -183,11 +232,23 @@ class ArchipelagoImpl implements Archipelago {
       this.islands.delete(anIsland.id)
     }
 
+    this.markGeometryDirty(biggest)
+
     return [biggest, updates]
   }
 
-  intersectIslands(anIsland: Island, otherIsland: Island, intersectDistance: number) {
-    return anIsland.peers.some((it) => this.intersectPeerGroup(it, otherIsland.peers, intersectDistance))
+  intersectIslands(anIsland: InternalIsland, otherIsland: InternalIsland, intersectDistance: number) {
+    return (
+      this.intersectIslandGeometry(anIsland, otherIsland, intersectDistance) &&
+      anIsland.peers.some((it) => this.intersectPeerGroup(it, otherIsland.peers, intersectDistance))
+    )
+  }
+
+  intersectIslandGeometry(anIsland: InternalIsland, otherIsland: InternalIsland, intersectDistance: number) {
+    return (
+      squaredDistance(anIsland.center, otherIsland.center) <=
+      squared(anIsland.radius + otherIsland.radius + intersectDistance)
+    )
   }
 
   intersectPeerGroup(peer: PeerData, group: PeerData[], intersectDistance: number) {
@@ -195,22 +256,44 @@ class ArchipelagoImpl implements Archipelago {
   }
 
   intersectPeers(aPeer: PeerData, otherPeer: PeerData, intersectDistance: number) {
-    return this.options.distanceFunction(aPeer.position, otherPeer.position) <= intersectDistance
+    return squaredDistance(aPeer.position, otherPeer.position) <= squared(intersectDistance)
   }
 
-  addPeersToIsland(island: Island, peers: PeerData[]): IslandUpdates {
+  addPeersToIsland(island: InternalIsland, peers: PeerData[]): IslandUpdates {
     island.peers.push(...peers)
+    this.markGeometryDirty(island)
     return this.setPeersIsland(island.id, peers)
+  }
+
+  markGeometryDirty(island: InternalIsland) {
+    island._geometryDirty = true
   }
 
   createIsland(group: PeerData[]): IslandUpdates {
     const newIslandId = this.generateId()
 
-    const island = {
+    const island: InternalIsland = {
       id: newIslandId,
       peers: group,
       maxPeers: this.options.maxPeersPerIsland,
       sequenceId: ++this.currentSequence,
+      _geometryDirty: true,
+      _recalculateGeometryIfNeeded() {
+        if (this.peers.length > 0 && (this._geometryDirty || !this._radius || !this._center)) {
+          const [center, radius] = islandGeometryCalculator(this.peers)
+          this._center = center
+          this._radius = radius
+          this._geometryDirty = false
+        }
+      },
+      get center() {
+        this._recalculateGeometryIfNeeded()
+        return this._center!
+      },
+      get radius() {
+        this._recalculateGeometryIfNeeded()
+        return this._radius!
+      },
     }
 
     this.islands.set(newIslandId, island)
@@ -229,11 +312,11 @@ class ArchipelagoImpl implements Archipelago {
     return updates
   }
 
-  getIslands(): Island[] {
+  getIslands(): InternalIsland[] {
     return [...this.islands.values()]
   }
 
-  getIsland(id: string): Island | undefined {
+  getIsland(id: string): InternalIsland | undefined {
     return this.islands.get(id)
   }
 

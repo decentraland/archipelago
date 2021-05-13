@@ -12,7 +12,8 @@ export type Island = {
   id: string
   peers: PeerData[]
   maxPeers: number
-  center?: Position3D
+  center: Position3D
+  radius: number
   sequenceId: number
 }
 
@@ -39,6 +40,5 @@ export type ArchipelagoOptions = {
   maxPeersPerIsland: number
   joinDistance: number
   leaveDistance: number
-  distanceFunction: (a: Position3D, b: Position3D) => number
   islandIdGenerator: IdGenerator
 }

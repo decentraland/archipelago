@@ -15,10 +15,7 @@ type RemoteFile = {
   dirty?: boolean
 }
 
-const DEFAULT_FILE_CONTENT = `(configure { "joinDistance" 4096 ; 64 * 64
-             "leaveDistance" 6400 ; 80 * 80
-            })
-`
+const DEFAULT_FILE_CONTENT = `(configure)`
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value)

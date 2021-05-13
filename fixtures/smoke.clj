@@ -18,9 +18,7 @@
 (assert/throws (assert/equal #{1} #{2}))
 
 ; initialize the archipelago
-(configure { "joinDistance" 4096 ; 64 * 64
-             "leaveDistance" 6400 ; 80 * 80
-            })
+(configure)
 
 ; test functions
 (def ensureIslandsCount #(assert/equal (get (getIslands) "length") %1))

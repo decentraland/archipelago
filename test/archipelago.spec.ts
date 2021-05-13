@@ -8,8 +8,7 @@ type PositionWithId = [string, number, number, number]
 describe("archipelago", () => {
   let archipelago: Archipelago
   beforeEach(() => {
-    // Distances are squared. We may want to make the interface so we don't have to consider that
-    archipelago = defaultArchipelago({ joinDistance: 64 * 64, leaveDistance: 80 * 80 })
+    archipelago = defaultArchipelago({ joinDistance: 64, leaveDistance: 80 })
   })
 
   function setPositions(...positions: PositionWithId[]) {
@@ -165,5 +164,24 @@ describe("archipelago", () => {
     expectLeft(updates, "2", "I1")
     expectChangedTo(updates, "3", "I4")
     expectNoUpdate(updates, "1")
+  })
+
+  it("calculates island geometry", () => {
+    setPositions(["1", 0, 0, 0], ["2", 40, 0, 40])
+
+    const island = archipelago.getIslands()[0]
+
+    expect.deepStrictEqual(island.center, [20, 0, 20])
+    expect(Math.abs(island.radius - Math.sqrt(800)) < 0.0000001) // Distance between center and farthest peer
+  })
+
+
+  it("sets radius to encompass all peers", () => {
+    setPositions(["1", 0, 0, 0], ["2", 10, 0, 10], ["3", 6, 0, 6], ["4", 40, 0, 40])
+
+    const island = archipelago.getIslands()[0]
+
+    expect.deepStrictEqual(island.center, [14, 0, 14])
+    expect(Math.abs(island.radius - Math.sqrt(1352)) < 0.0000001)
   })
 })

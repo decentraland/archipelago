@@ -1,6 +1,4 @@
-(configure { "joinDistance" 4096 ; 64 * 64
-             "leaveDistance" 6400 ; 80 * 80
-            })
+(configure)
 
 (move
       ["s[" -437.29864501953125 0.07999992370605469 970.9838256835938]

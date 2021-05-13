@@ -1,8 +1,6 @@
 
 ; initialize the archipelago
-(configure { "joinDistance" 4096 ; 64 * 64
-             "leaveDistance" 6400 ; 80 * 80
-            })
+(configure)
 
 ; test case 1
 (move ["1" 0 0 0]
