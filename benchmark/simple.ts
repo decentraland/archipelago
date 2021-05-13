@@ -10,11 +10,14 @@ console.log("Using seed " + SEED)
 
 const TARGET_PEERS = parseInt(process.env.TARGET_PEERS ?? "5000")
 const DISCONNECT_CHANCE = parseFloat(process.env.DISCONNECT_CHANCE ?? "0.01")
+const HOTSPOT_CHANCE = parseFloat(process.env.HOTSPOT_CHANCE ?? "0.95")
+const TELEPORT_CHANCE = parseFloat(process.env.TELEPORT_CHANCE ?? "0.01")
 const MIN_POSITION = [-2400, 0, -2400]
 const MAX_POSITION = [2400, 0, 2400]
 const DURATION = parseFloat(process.env.DURATION ?? "120")
+const HOTSPOTS = parseInt(process.env.HOTSPOTS ?? "100")
 
-const activePeers: string[] = []
+const activePeers: { id: string; position: Position3D }[] = []
 const peerIdGenerator = sequentialIdGenerator("Peer")
 
 const prng = seedrandom(SEED)
@@ -39,27 +42,57 @@ function generatePosition(): Position3D {
   ]
 }
 
+function* generateHotspots() {
+  for (let i = 0; i < HOTSPOTS; i++) {
+    yield generatePosition()
+  }
+}
+
+const hotSpots = [...generateHotspots()]
+
+function generatePositionAround(aPosition: Position3D, maxOffset: Position3D): Position3D {
+  return [
+    randomBetween(aPosition[0] - maxOffset[0], aPosition[0] + maxOffset[0]),
+    randomBetween(aPosition[1] - maxOffset[1], aPosition[1] + maxOffset[1]),
+    randomBetween(aPosition[2] - maxOffset[2], aPosition[2] + maxOffset[2]),
+  ]
+}
+
+function generateRandomHotspotPositon(): Position3D {
+  const hotspotIndex = randomArrayIndex(hotSpots)
+
+  return generatePositionAround(hotSpots[hotspotIndex], [64, 0, 64])
+}
+
+function generateNewPeerPosition(): Position3D {
+  return randomBoolean(HOTSPOT_CHANCE) ? generateRandomHotspotPositon() : generatePosition()
+}
+
 function addPeer() {
-  const randomPosition = generatePosition()
+  const randomPosition = generateNewPeerPosition()
   const id = peerIdGenerator.generateId()
 
-  archipelago.setPeersPositions({ id, position: randomPosition })
-  activePeers.push(id)
+  const request = { id, position: randomPosition }
+
+  archipelago.setPeersPositions(request)
+  activePeers.push(request)
 }
 
 function disconnectRandomPeer() {
   const index = randomArrayIndex(activePeers)
 
-  const peerId = activePeers[index]
+  const activePeer = activePeers[index]
   activePeers[index] = activePeers.pop()! // we remove the last element because is fast, and store it in the current index
 
-  archipelago.clearPeers(peerId)
+  archipelago.clearPeers(activePeer.id)
 }
 
 function changeRandomPeerPosition() {
   const index = randomArrayIndex(activePeers)
-
-  archipelago.setPeersPositions({ id: activePeers[index], position: generatePosition() })
+  const newPosition = randomBoolean(TELEPORT_CHANCE)
+    ? generateNewPeerPosition()
+    : generatePositionAround(activePeers[index].position, [5, 0, 5])
+  archipelago.setPeersPositions({ id: activePeers[index].id, position: newPosition })
 }
 
 function loop() {
