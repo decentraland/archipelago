@@ -228,7 +228,7 @@ class ArchipelagoImpl implements Archipelago {
   intersectIslands(anIsland: InternalIsland, otherIsland: InternalIsland, intersectDistance: number) {
     return (
       this.intersectIslandGeometry(anIsland, otherIsland, intersectDistance) &&
-      anIsland.peers.some((it) => this.intersectPeerGroup(it, otherIsland.peers, intersectDistance))
+      anIsland.peers.some((it) => this.intersectPeerIsland(it, otherIsland, intersectDistance))
     )
   }
 
@@ -236,6 +236,13 @@ class ArchipelagoImpl implements Archipelago {
     return (
       squaredDistance(anIsland.center, otherIsland.center) <=
       squared(anIsland.radius + otherIsland.radius + intersectDistance)
+    )
+  }
+
+  intersectPeerIsland(peer: PeerData, island: InternalIsland, intersectDistance: number) {
+    return (
+      squaredDistance(peer.position, island.center) <= squared(intersectDistance + island.radius) &&
+      this.intersectPeerGroup(peer, island.peers, intersectDistance)
     )
   }
 
