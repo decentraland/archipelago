@@ -2,7 +2,7 @@ import { defaultArchipelago, PeerData, Position3D } from "../src"
 import seedrandom from "seedrandom"
 import { sequentialIdGenerator } from "../src/idGenerator"
 
-const archipelago = defaultArchipelago({ joinDistance: 64 * 64, leaveDistance: 80 * 80 })
+const archipelago = defaultArchipelago({ joinDistance: 64, leaveDistance: 80 })
 
 const SEED = process.env.SEED ? process.env.SEED : `${seedrandom()()}`
 
