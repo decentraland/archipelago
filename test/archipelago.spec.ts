@@ -1,7 +1,8 @@
 import { defaultArchipelago, Archipelago, IslandUpdates } from "../src"
 
 import expect from "assert"
-import { expectIslandsWith, expectIslandWith } from "./lib"
+import { expectIslandsWith, expectIslandWith, setMultiplePeersAround } from "./lib"
+import { sequentialIdGenerator } from "../src/idGenerator"
 
 type PositionWithId = [string, number, number, number]
 
@@ -175,7 +176,6 @@ describe("archipelago", () => {
     expect(Math.abs(island.radius - Math.sqrt(800)) < 0.0000001) // Distance between center and farthest peer
   })
 
-
   it("sets radius to encompass all peers", () => {
     setPositions(["1", 0, 0, 0], ["2", 10, 0, 10], ["3", 6, 0, 6], ["4", 40, 0, 40])
 
@@ -183,5 +183,61 @@ describe("archipelago", () => {
 
     expect.deepStrictEqual(island.center, [14, 0, 14])
     expect(Math.abs(island.radius - Math.sqrt(1352)) < 0.0000001)
+  })
+
+  it("enforces max peers per island limit", () => {
+    const idGenerator = sequentialIdGenerator("P")
+    const firstRequests = setMultiplePeersAround(archipelago, [0, 0, 0], 190, idGenerator)
+
+    expect.strictEqual(archipelago.getIslandsCount(), 1)
+    expectIslandWith(archipelago, ...firstRequests.map((it) => it.id))
+
+    const peerRequests = setMultiplePeersAround(archipelago, [100, 0, 0], 20, idGenerator)
+
+    expect.strictEqual(archipelago.getIslandsCount(), 2)
+    expectIslandWith(archipelago, ...peerRequests.map((it) => it.id))
+
+    setPositions(
+      ...peerRequests.map((it) => [it.id, it.position[0] - 100, it.position[1], it.position[2]] as PositionWithId)
+    )
+
+    expect.strictEqual(archipelago.getIslandsCount(), 2)
+    expectIslandWith(archipelago, ...firstRequests.map((it) => it.id))
+    expectIslandWith(archipelago, ...peerRequests.map((it) => it.id))
+
+    archipelago.clearPeers(...peerRequests.slice(0, 10).map((it) => it.id))
+
+    expect.strictEqual(archipelago.getIslandsCount(), 1)
+    expectIslandWith(archipelago, ...firstRequests.map((it) => it.id), ...peerRequests.slice(10, 20).map((it) => it.id))
+  })
+
+  it("merges with the biggest island available", () => {
+    const idGenerator = sequentialIdGenerator("P")
+    const superBigIsland = setMultiplePeersAround(archipelago, [0, 0, 0], 190, idGenerator)
+    const bigIsland = setMultiplePeersAround(archipelago, [100, 0, 0], 150, idGenerator)
+    const smallIsland = setMultiplePeersAround(archipelago, [200, 0, 0], 100, idGenerator)
+
+    setPositions(
+      ...bigIsland.map((it) => [it.id, it.position[0] - 100, it.position[1], it.position[2]] as PositionWithId)
+    )
+
+    setPositions(
+      ...smallIsland.map((it) => [it.id, it.position[0] - 200, it.position[1], it.position[2]] as PositionWithId)
+    )
+
+    expect.strictEqual(archipelago.getIslandsCount(), 3)
+
+    setPositions(["newPeer", 0, 0, 0])
+    expect.strictEqual(archipelago.getIslandsCount(), 3)
+
+    expectIslandWith(archipelago, "newPeer", ...superBigIsland.map((it) => it.id))
+
+    const smallestIsland = setMultiplePeersAround(archipelago, [100, 0, 0], 20, idGenerator)
+
+    setPositions(
+      ...smallestIsland.map((it) => [it.id, it.position[0] - 100, it.position[1], it.position[2]] as PositionWithId)
+    )
+
+    expectIslandWith(archipelago, ...smallestIsland.map((it) => it.id), ...bigIsland.map((it) => it.id))
   })
 })

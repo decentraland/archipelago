@@ -24,7 +24,7 @@ const squaredDistance = (p1: Position3D, p2: Position3D) => {
   return xDiff * xDiff + zDiff * zDiff
 }
 
-function defaultOptions() {
+export function defaultOptions() {
   return {
     maxPeersPerIsland: 200,
     islandIdGenerator: sequentialIdGenerator("I"),
@@ -164,7 +164,7 @@ class ArchipelagoImpl implements Archipelago {
           }
         }
         if (islandsIntersected.length > 0) {
-          ;[, updates] = this.mergeIslands(updates, island, ...islandsIntersected)
+          updates = this.mergeIslands(updates, island, ...islandsIntersected)
         }
       }
     }
@@ -205,24 +205,41 @@ class ArchipelagoImpl implements Archipelago {
     }
   }
 
-  mergeIslands(updates: IslandUpdates, ...islands: InternalIsland[]): [InternalIsland, IslandUpdates] {
-    const biggest = popFirstByOrder(islands, (i1, i2) =>
+  mergeIslands(updates: IslandUpdates, ...islands: InternalIsland[]): IslandUpdates {
+    if (islands.length < 1) return updates
+
+    const sortedIslands = islands.sort((i1, i2) =>
       i1.peers.length === i2.peers.length
         ? Math.sign(i1.sequenceId - i2.sequenceId)
         : Math.sign(i2.peers.length - i1.peers.length)
-    )! // We should never call mergeIslands with an empty list
+    )
 
-    while (islands.length > 0) {
-      const anIsland = islands.shift()!
+    const biggestIslands: InternalIsland[] = [sortedIslands.shift()!]
 
-      updates = this.addPeersToIsland(biggest, anIsland.peers, updates)
+    let anIsland: InternalIsland | undefined
 
-      this.islands.delete(anIsland.id)
+    while ((anIsland = sortedIslands.shift())) {
+      let merged = false
+
+      for (let i = 0; i < biggestIslands.length; i++) {
+        if (biggestIslands[i].peers.length + anIsland.peers.length <= biggestIslands[i].maxPeers) {
+          updates = this.addPeersToIsland(biggestIslands[i], anIsland.peers, updates)
+
+          this.islands.delete(anIsland.id)
+
+          this.markGeometryDirty(biggestIslands[i])
+
+          merged = true
+          break
+        }
+      }
+
+      if (!merged) {
+        biggestIslands.push(anIsland)
+      }
     }
 
-    this.markGeometryDirty(biggest)
-
-    return [biggest, updates]
+    return updates
   }
 
   intersectIslands(anIsland: InternalIsland, otherIsland: InternalIsland, intersectDistance: number) {

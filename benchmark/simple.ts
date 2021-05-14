@@ -1,71 +1,53 @@
-import { defaultArchipelago, PeerData, Position3D } from "../src"
+import { defaultArchipelago, Position3D } from "../src"
+import { defaultOptions } from "../src/Archipelago"
 import seedrandom from "seedrandom"
 import { sequentialIdGenerator } from "../src/idGenerator"
+import { createRandomizer } from "../test/random"
 
-const archipelago = defaultArchipelago({ joinDistance: 64, leaveDistance: 80 })
-
+const MAX_PEERS_PER_ISLAND = process.env.MAX_PEERS_PER_ISLAND
+  ? parseInt(process.env.MAX_PEERS_PER_ISLAND)
+  : defaultOptions().maxPeersPerIsland
 const SEED = process.env.SEED ? process.env.SEED : `${seedrandom()()}`
-
-console.log("Using seed " + SEED)
-
 const TARGET_PEERS = parseInt(process.env.TARGET_PEERS ?? "5000")
 const DISCONNECT_CHANCE = parseFloat(process.env.DISCONNECT_CHANCE ?? "0.01")
 const HOTSPOT_CHANCE = parseFloat(process.env.HOTSPOT_CHANCE ?? "0.95")
 const TELEPORT_CHANCE = parseFloat(process.env.TELEPORT_CHANCE ?? "0.01")
-const MIN_POSITION = [-2400, 0, -2400]
-const MAX_POSITION = [2400, 0, 2400]
+const MIN_POSITION = (process.env.MIN_POSITION ? JSON.parse(process.env.MIN_POSITION) : [-2400, 0, -2400]) as Position3D
+const MAX_POSITION = (process.env.MAX_POSITION ? JSON.parse(process.env.MAX_POSITION) : [2400, 0, 2400]) as Position3D
 const DURATION = parseFloat(process.env.DURATION ?? "120")
 const HOTSPOTS = parseInt(process.env.HOTSPOTS ?? "100")
+
+const DEBUG = process.env.DEBUG === "true"
 
 const activePeers: { id: string; position: Position3D }[] = []
 const peerIdGenerator = sequentialIdGenerator("Peer")
 
+const archipelago = defaultArchipelago({ joinDistance: 64, leaveDistance: 80, maxPeersPerIsland: MAX_PEERS_PER_ISLAND })
+
+console.log("Using seed " + SEED)
+
 const prng = seedrandom(SEED)
 
-function randomBetween(min: number, max: number): number {
-  return prng() * (max - min) + min
-}
-
-function randomBoolean(trueChance: number): boolean {
-  return prng() <= trueChance
-}
-
-function randomArrayIndex<T>(array: T[]) {
-  return Math.floor(prng() * array.length)
-}
-
-function generatePosition(): Position3D {
-  return [
-    randomBetween(MIN_POSITION[0], MAX_POSITION[0]),
-    randomBetween(MIN_POSITION[1], MAX_POSITION[1]),
-    randomBetween(MIN_POSITION[2], MAX_POSITION[2]),
-  ]
-}
+const randomizer = createRandomizer(prng)
 
 function* generateHotspots() {
   for (let i = 0; i < HOTSPOTS; i++) {
-    yield generatePosition()
+    yield randomizer.generatePosition(MIN_POSITION, MAX_POSITION)
   }
 }
 
 const hotSpots = [...generateHotspots()]
 
-function generatePositionAround(aPosition: Position3D, maxOffset: Position3D): Position3D {
-  return [
-    randomBetween(aPosition[0] - maxOffset[0], aPosition[0] + maxOffset[0]),
-    randomBetween(aPosition[1] - maxOffset[1], aPosition[1] + maxOffset[1]),
-    randomBetween(aPosition[2] - maxOffset[2], aPosition[2] + maxOffset[2]),
-  ]
-}
-
 function generateRandomHotspotPositon(): Position3D {
-  const hotspotIndex = randomArrayIndex(hotSpots)
+  const hotspotIndex = randomizer.randomArrayIndex(hotSpots)
 
-  return generatePositionAround(hotSpots[hotspotIndex], [64, 0, 64])
+  return randomizer.generatePositionAround(hotSpots[hotspotIndex], [64, 0, 64])
 }
 
 function generateNewPeerPosition(): Position3D {
-  return randomBoolean(HOTSPOT_CHANCE) ? generateRandomHotspotPositon() : generatePosition()
+  return randomizer.randomBoolean(HOTSPOT_CHANCE)
+    ? generateRandomHotspotPositon()
+    : randomizer.generatePosition(MIN_POSITION, MAX_POSITION)
 }
 
 function addPeer() {
@@ -79,7 +61,7 @@ function addPeer() {
 }
 
 function disconnectRandomPeer() {
-  const index = randomArrayIndex(activePeers)
+  const index = randomizer.randomArrayIndex(activePeers)
 
   const activePeer = activePeers[index]
   activePeers[index] = activePeers.pop()! // we remove the last element because is fast, and store it in the current index
@@ -88,10 +70,10 @@ function disconnectRandomPeer() {
 }
 
 function changeRandomPeerPosition() {
-  const index = randomArrayIndex(activePeers)
-  const newPosition = randomBoolean(TELEPORT_CHANCE)
+  const index = randomizer.randomArrayIndex(activePeers)
+  const newPosition = randomizer.randomBoolean(TELEPORT_CHANCE)
     ? generateNewPeerPosition()
-    : generatePositionAround(activePeers[index].position, [5, 0, 5])
+    : randomizer.generatePositionAround(activePeers[index].position, [5, 0, 5])
   archipelago.setPeersPositions({ id: activePeers[index].id, position: newPosition })
 }
 
@@ -99,7 +81,7 @@ function loop() {
   if (archipelago.getPeersCount() < TARGET_PEERS) {
     addPeer()
   } else {
-    if (randomBoolean(DISCONNECT_CHANCE)) {
+    if (randomizer.randomBoolean(DISCONNECT_CHANCE)) {
       disconnectRandomPeer()
     } else {
       changeRandomPeerPosition()
@@ -118,24 +100,44 @@ let elapsed = 0
 let currentCycleOperations = 0
 let currentCycleStartTime = Date.now()
 
+const logger = DEBUG
+  ? () => {
+      console.log(
+        `
+Performed ${operations} ops. ${((operations * 1000) / elapsed).toFixed(2)} avg ops/s
+Last second: ${currentCycleOperations} ops. ${(
+          (currentCycleOperations * 1000) /
+          (Date.now() - currentCycleStartTime)
+        ).toFixed(2)} avg ops/s
+Number of peers: ${archipelago.getPeersCount()}
+Number of islands: ${archipelago.getIslandsCount()}
+Number of peer per islands: ${archipelago.getIslands().map((it) => it.peers.length)}
+Elapsed: ${elapsed / 1000}s. Remaining: ${DURATION - elapsed / 1000}s
+    `
+      )
+    }
+  : () => {
+      console.log(
+        `
+Performed ${operations} ops. ${((operations * 1000) / elapsed).toFixed(2)} avg ops/s
+Last second: ${currentCycleOperations} ops. ${(
+          (currentCycleOperations * 1000) /
+          (Date.now() - currentCycleStartTime)
+        ).toFixed(2)} avg ops/s
+Number of peers: ${archipelago.getPeersCount()}
+Number of islands: ${archipelago.getIslandsCount()}
+Elapsed: ${elapsed / 1000}s. Remaining: ${DURATION - elapsed / 1000}s
+    `
+      )
+    }
+
 while ((elapsed = Date.now() - startTime) < DURATION * 1000) {
   loop()
   operations++
   currentCycleOperations++
 
   if (elapsed > timeToLog) {
-    console.log(
-      `
-Performed ${operations} ops. ${((operations * 1000) / elapsed).toFixed(2)} avg ops/s
-Last second: ${currentCycleOperations} ops. ${(
-        (currentCycleOperations * 1000) /
-        (Date.now() - currentCycleStartTime)
-      ).toFixed(2)} avg ops/s
-Number of peers: ${archipelago.getPeersCount()}
-Number of islands: ${archipelago.getIslandsCount()}
-Elapsed: ${elapsed / 1000}s. Remaining: ${DURATION - elapsed / 1000}s
-      `
-    )
+    logger()
     timeToLog += 1000
     currentCycleStartTime = Date.now()
     currentCycleOperations = 0

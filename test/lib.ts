@@ -1,9 +1,11 @@
-import { Archipelago, ArchipelagoOptions, defaultArchipelago } from "../src"
+import { Archipelago, ArchipelagoOptions, defaultArchipelago, PeerPositionChange, Position3D } from "../src"
 import { BaseClosure, evaluate } from "tiny-clojure"
 import { NodeError } from "tiny-clojure/dist/types"
 import assert from "assert"
 import get from "lodash.get"
 import deepEqual from "fast-deep-equal"
+import { createRandomizer } from "./random"
+import { IdGenerator, sequentialIdGenerator } from "../src/idGenerator"
 
 export const defaultArchipelagoOptions = { joinDistance: 64, leaveDistance: 80 }
 
@@ -33,6 +35,25 @@ export function expectIslandsWith(archipelago: Archipelago, ...islandIds: string
 export function expectIslandsCount(archipelago: Archipelago, count: number) {
   assert.strictEqual(archipelago.getIslands().length, count)
 }
+
+export function setMultiplePeersAround(
+  archipelago: Archipelago,
+  position: Position3D,
+  qty: number,
+  idGenerator: IdGenerator = sequentialIdGenerator("P"),
+  offset: Position3D = [20, 0, 20]
+) {
+  const randomizer = createRandomizer()
+  const requests: PeerPositionChange[] = []
+  for (let i = 0; i < qty; i++) {
+    requests.push({ id: idGenerator.generateId(), position: randomizer.generatePositionAround(position, offset) })
+  }
+
+  archipelago.setPeersPositions(...requests)
+
+  return requests
+}
+
 export function configureLibs(closure: BaseClosure) {
   // (configure { options })
   closure.defJsFunction("configure", (options?: ArchipelagoOptions) => {
