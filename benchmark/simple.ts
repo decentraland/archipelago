@@ -1,4 +1,4 @@
-import { defaultArchipelago, Position3D } from "../src"
+import { bufferedArchipelago, Position3D } from "../src"
 import { defaultOptions } from "../src/Archipelago"
 import seedrandom from "seedrandom"
 import { sequentialIdGenerator } from "../src/idGenerator"
@@ -22,7 +22,11 @@ const DEBUG = process.env.DEBUG === "true"
 const activePeers: { id: string; position: Position3D }[] = []
 const peerIdGenerator = sequentialIdGenerator("Peer")
 
-const archipelago = defaultArchipelago({ joinDistance: 64, leaveDistance: 80, maxPeersPerIsland: MAX_PEERS_PER_ISLAND })
+const archipelago = bufferedArchipelago({
+  joinDistance: 64,
+  leaveDistance: 80,
+  maxPeersPerIsland: MAX_PEERS_PER_ISLAND,
+})
 
 console.log("Using seed " + SEED)
 
@@ -56,7 +60,7 @@ function addPeer() {
 
   const request = { id, position: randomPosition }
 
-  archipelago.setPeersPositions(request)
+  archipelago.setPeersPositions([request])
   activePeers.push(request)
 }
 
@@ -66,7 +70,7 @@ function disconnectRandomPeer() {
   const activePeer = activePeers[index]
   activePeers[index] = activePeers.pop()! // we remove the last element because is fast, and store it in the current index
 
-  archipelago.clearPeers(activePeer.id)
+  archipelago.clearPeers([activePeer.id])
 }
 
 function changeRandomPeerPosition() {
@@ -74,7 +78,7 @@ function changeRandomPeerPosition() {
   const newPosition = randomizer.randomBoolean(TELEPORT_CHANCE)
     ? generateNewPeerPosition()
     : randomizer.generatePositionAround(activePeers[index].position, [5, 0, 5])
-  archipelago.setPeersPositions({ id: activePeers[index].id, position: newPosition })
+  archipelago.setPeersPositions([{ id: activePeers[index].id, position: newPosition }])
 }
 
 function loop() {
@@ -131,10 +135,12 @@ Elapsed: ${elapsed / 1000}s. Remaining: ${DURATION - elapsed / 1000}s
       )
     }
 
-while ((elapsed = Date.now() - startTime) < DURATION * 1000) {
-  loop()
-  operations++
-  currentCycleOperations++
+const timerLoop = () => {
+  for (let i = 0; i < 1000; i++) {
+    loop()
+    operations++
+    currentCycleOperations++
+  }
 
   if (elapsed > timeToLog) {
     logger()
@@ -142,6 +148,13 @@ while ((elapsed = Date.now() - startTime) < DURATION * 1000) {
     currentCycleStartTime = Date.now()
     currentCycleOperations = 0
   }
+  if ((elapsed = Date.now() - startTime) < DURATION * 1000) {
+    setTimeout(timerLoop, 0)
+  } else {
+    archipelago.flush()
+
+    console.log(`Test finished at ${Date.now()}. Total operations: ${operations}`)
+  }
 }
 
-console.log(`Test finished at ${Date.now()}. Total operations: ${operations}`)
+timerLoop()

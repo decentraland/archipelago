@@ -21,10 +21,10 @@ export type PeerPositionChange = { id: string; position: Position3D }
 
 export interface Archipelago {
   getOptions(): ArchipelagoOptions
-  setPeersPositions(...requests: PeerPositionChange[]): IslandUpdates
+  setPeersPositions(requests: PeerPositionChange[]): IslandUpdates
   getIslands(): Island[]
   getIsland(id: string): Island | undefined
-  clearPeers(...ids: string[]): IslandUpdates
+  clearPeers(ids: string[]): IslandUpdates
   getPeersCount() : number
   getIslandsCount() : number
 }
