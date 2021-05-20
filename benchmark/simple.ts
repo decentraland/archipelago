@@ -1,4 +1,4 @@
-import { bufferedArchipelago, Position3D } from "../src"
+import { orchestatedArchipelago, Position3D } from "../src"
 import { defaultOptions } from "../src/Archipelago"
 import seedrandom from "seedrandom"
 import { sequentialIdGenerator } from "../src/idGenerator"
@@ -22,7 +22,7 @@ const DEBUG = process.env.DEBUG === "true"
 const activePeers: { id: string; position: Position3D }[] = []
 const peerIdGenerator = sequentialIdGenerator("Peer")
 
-const archipelago = bufferedArchipelago({
+const orchestator = orchestatedArchipelago({
   joinDistance: 64,
   leaveDistance: 80,
   maxPeersPerIsland: MAX_PEERS_PER_ISLAND,
@@ -60,7 +60,7 @@ function addPeer() {
 
   const request = { id, position: randomPosition }
 
-  archipelago.setPeersPositions([request])
+  orchestator.setPeerPosition(request)
   activePeers.push(request)
 }
 
@@ -70,7 +70,7 @@ function disconnectRandomPeer() {
   const activePeer = activePeers[index]
   activePeers[index] = activePeers.pop()! // we remove the last element because is fast, and store it in the current index
 
-  archipelago.clearPeers([activePeer.id])
+  orchestator.clearPeer(activePeer.id)
 }
 
 function changeRandomPeerPosition() {
@@ -78,11 +78,11 @@ function changeRandomPeerPosition() {
   const newPosition = randomizer.randomBoolean(TELEPORT_CHANCE)
     ? generateNewPeerPosition()
     : randomizer.generatePositionAround(activePeers[index].position, [5, 0, 5])
-  archipelago.setPeersPositions([{ id: activePeers[index].id, position: newPosition }])
+  orchestator.setPeerPosition({ id: activePeers[index].id, position: newPosition })
 }
 
 function loop() {
-  if (archipelago.getPeersCount() < TARGET_PEERS) {
+  if (orchestator.getPeersCount() < TARGET_PEERS) {
     addPeer()
   } else {
     if (randomizer.randomBoolean(DISCONNECT_CHANCE)) {
@@ -105,7 +105,7 @@ let currentCycleOperations = 0
 let currentCycleStartTime = Date.now()
 
 const logger = DEBUG
-  ? () => {
+  ? async () => {
       console.log(
         `
 Performed ${operations} ops. ${((operations * 1000) / elapsed).toFixed(2)} avg ops/s
@@ -113,14 +113,14 @@ Last second: ${currentCycleOperations} ops. ${(
           (currentCycleOperations * 1000) /
           (Date.now() - currentCycleStartTime)
         ).toFixed(2)} avg ops/s
-Number of peers: ${archipelago.getPeersCount()}
-Number of islands: ${archipelago.getIslandsCount()}
-Number of peer per islands: ${archipelago.getIslands().map((it) => it.peers.length)}
+Number of peers: ${orchestator.getPeersCount()}
+Number of islands: ${await orchestator.getIslandsCount()}
+Number of peer per islands: ${(await orchestator.getIslands()).map((it) => it.peers.length)}
 Elapsed: ${elapsed / 1000}s. Remaining: ${DURATION - elapsed / 1000}s
     `
       )
     }
-  : () => {
+  : async () => {
       console.log(
         `
 Performed ${operations} ops. ${((operations * 1000) / elapsed).toFixed(2)} avg ops/s
@@ -128,15 +128,15 @@ Last second: ${currentCycleOperations} ops. ${(
           (currentCycleOperations * 1000) /
           (Date.now() - currentCycleStartTime)
         ).toFixed(2)} avg ops/s
-Number of peers: ${archipelago.getPeersCount()}
-Number of islands: ${archipelago.getIslandsCount()}
+Number of peers: ${orchestator.getPeersCount()}
+Number of islands: ${await orchestator.getIslandsCount()}
 Elapsed: ${elapsed / 1000}s. Remaining: ${DURATION - elapsed / 1000}s
     `
       )
     }
 
 const timerLoop = () => {
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 5000; i++) {
     loop()
     operations++
     currentCycleOperations++
@@ -149,9 +149,9 @@ const timerLoop = () => {
     currentCycleOperations = 0
   }
   if ((elapsed = Date.now() - startTime) < DURATION * 1000) {
-    setTimeout(timerLoop, 0)
+    setTimeout(timerLoop, 10)
   } else {
-    archipelago.flush()
+    orchestator.flush()
 
     console.log(`Test finished at ${Date.now()}. Total operations: ${operations}`)
   }

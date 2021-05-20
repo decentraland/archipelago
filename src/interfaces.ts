@@ -25,12 +25,12 @@ export interface Archipelago {
   getIslands(): Island[]
   getIsland(id: string): Island | undefined
   clearPeers(ids: string[]): IslandUpdates
-  getPeersCount() : number
-  getIslandsCount() : number
+  getPeersCount(): number
+  getIslandsCount(): number
 }
 
 export type IslandUpdate = {
-  action: 'leave' | 'changeTo'
+  action: "leave" | "changeTo"
   islandId: string
 }
 
@@ -42,3 +42,7 @@ export type ArchipelagoOptions = {
   leaveDistance: number
   islandIdGenerator: IdGenerator
 }
+
+export type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
+
+export type ArchipelagoParameters = MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>

@@ -7,10 +7,10 @@ import {
   IslandUpdates,
   PeerPositionChange,
   Island,
+  MandatoryArchipelagoOptions,
+  ArchipelagoParameters,
 } from "./interfaces"
 import { findMax, popFirstByOrder, popMax } from "./utils"
-
-export type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
 const X_AXIS = 0
 const Y_AXIS = 1
@@ -69,7 +69,7 @@ class ArchipelagoImpl implements Archipelago {
     return this.options.islandIdGenerator.generateId()
   }
 
-  constructor(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>) {
+  constructor(options: ArchipelagoParameters) {
     this.options = { ...defaultOptions(), ...options }
   }
 
@@ -333,6 +333,6 @@ class ArchipelagoImpl implements Archipelago {
   }
 }
 
-export function defaultArchipelago(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>): Archipelago {
+export function defaultArchipelago(options: ArchipelagoParameters): Archipelago {
   return new ArchipelagoImpl(options)
 }

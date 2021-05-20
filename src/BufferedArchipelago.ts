@@ -1,5 +1,13 @@
-import { defaultArchipelago, MandatoryArchipelagoOptions } from "./Archipelago"
-import { Archipelago, ArchipelagoOptions, Island, IslandUpdates, PeerPositionChange, Position3D } from "./interfaces"
+import { defaultArchipelago } from "./Archipelago"
+import {
+  Archipelago,
+  ArchipelagoOptions,
+  ArchipelagoParameters,
+  Island,
+  IslandUpdates,
+  PeerPositionChange,
+  Position3D,
+} from "./interfaces"
 
 type SetPositionUpdate = { type: "set-position"; position: Position3D }
 type ClearUpdate = { type: "clear" }
@@ -17,7 +25,7 @@ class BufferedArchipelago implements Archipelago {
 
   activePeers: Set<string> = new Set()
 
-  constructor(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions> & { flushFrequency?: number }) {
+  constructor(options: ArchipelagoParameters & { flushFrequency?: number }) {
     const flushFrequency = options.flushFrequency ?? 2
     this.innerArchipelago = defaultArchipelago(options)
 
@@ -107,8 +115,6 @@ class BufferedArchipelago implements Archipelago {
   }
 }
 
-export function bufferedArchipelago(
-  options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions> & { flushFrequency?: number }
-): BufferedArchipelago {
+export function bufferedArchipelago(options: ArchipelagoParameters & { flushFrequency?: number }): BufferedArchipelago {
   return new BufferedArchipelago(options)
 }

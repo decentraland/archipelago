@@ -4,16 +4,24 @@
 
 ```ts
 
+import { Worker } from 'worker_threads';
+
 // @public (undocumented)
 export interface Archipelago {
     // (undocumented)
-    clearPeer(id: string): boolean;
+    clearPeers(ids: string[]): IslandUpdates;
     // (undocumented)
     getIsland(id: string): Island | undefined;
     // (undocumented)
     getIslands(): Island[];
     // (undocumented)
-    setPeerPosition(id: string, position: Position3D): void;
+    getIslandsCount(): number;
+    // (undocumented)
+    getOptions(): ArchipelagoOptions;
+    // (undocumented)
+    getPeersCount(): number;
+    // (undocumented)
+    setPeersPositions(requests: PeerPositionChange[]): IslandUpdates;
 }
 
 // @public (undocumented)
@@ -21,20 +29,50 @@ export type ArchipelagoOptions = {
     maxPeersPerIsland: number;
     joinDistance: number;
     leaveDistance: number;
-    distanceFunction: (a: Position3D, b: Position3D) => number;
+    islandIdGenerator: IdGenerator;
 };
 
-// Warning: (ae-forgotten-export) The symbol "MandatoryArchipelagoOptions" needs to be exported by the entry point index.d.ts
+// @public (undocumented)
+export type ArchipelagoParameters = MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>;
+
+// Warning: (ae-forgotten-export) The symbol "BufferedArchipelago" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function defaultArchipelago(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>): Archipelago;
+export function bufferedArchipelago(options: ArchipelagoParameters & {
+    flushFrequency?: number;
+}): BufferedArchipelago;
+
+// @public (undocumented)
+export function defaultArchipelago(options: ArchipelagoParameters): Archipelago;
 
 // @public (undocumented)
 export type Island = {
     id: string;
     peers: PeerData[];
     maxPeers: number;
+    center: Position3D;
+    radius: number;
+    sequenceId: number;
 };
+
+// @public (undocumented)
+export type IslandUpdate = {
+    action: "leave" | "changeTo";
+    islandId: string;
+};
+
+// @public (undocumented)
+export type IslandUpdates = Record<string, IslandUpdate>;
+
+// @public (undocumented)
+export type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">;
+
+// Warning: (ae-forgotten-export) The symbol "Orchestator" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function orchestatedArchipelago(options: ArchipelagoParameters & {
+    flushFrequency?: number;
+}): Orchestator;
 
 // @public (undocumented)
 export type PeerData = {
@@ -44,8 +82,18 @@ export type PeerData = {
 };
 
 // @public (undocumented)
+export type PeerPositionChange = {
+    id: string;
+    position: Position3D;
+};
+
+// @public (undocumented)
 export type Position3D = [number, number, number];
 
+
+// Warnings were encountered during analysis:
+//
+// src/interfaces.ts:43:3 - (ae-forgotten-export) The symbol "IdGenerator" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 
