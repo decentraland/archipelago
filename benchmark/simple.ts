@@ -149,7 +149,7 @@ const timerLoop = () => {
     currentCycleOperations = 0
   }
   if ((elapsed = Date.now() - startTime) < DURATION * 1000) {
-    setTimeout(timerLoop, 10)
+    setTimeout(timerLoop, 20)
   } else {
     orchestator.flush()
 

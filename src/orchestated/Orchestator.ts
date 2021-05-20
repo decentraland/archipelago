@@ -1,4 +1,4 @@
-import { Worker } from "worker_threads"
+import { fork, ChildProcess } from "child_process"
 import { IdGenerator, sequentialIdGenerator } from "../idGenerator"
 import { ArchipelagoParameters, Island, IslandUpdates, PeerPositionChange, Position3D } from "../interfaces"
 import { WorkerMessage, WorkerResponse, WorkerRequest, WorkerStatus } from "./messageTypes"
@@ -17,7 +17,7 @@ class Orchestator {
 
   activePeers: Set<string> = new Set()
 
-  worker: Worker
+  worker: ChildProcess
   workerStatus: WorkerStatus = "unknown"
 
   activeWorkerRequests: Record<string, (a: any) => any> = {}
@@ -27,7 +27,7 @@ class Orchestator {
   constructor(parameters: ArchipelagoParameters & { flushFrequency?: number }) {
     const flushFrequency = parameters.flushFrequency ?? 1
 
-    this.worker = new Worker("./dist/orchestated/worker.js", { workerData: { archipelagoParameters: parameters } })
+    this.worker = fork("./dist/orchestated/worker.js", [JSON.stringify({ archipelagoParameters: parameters })])
 
     this.worker.on("message", this.handleWorkerMessage.bind(this))
 
@@ -65,7 +65,7 @@ class Orchestator {
   }
 
   sendMessageToWorker(message: WorkerMessage) {
-    this.worker.postMessage(message)
+    this.worker.send(message)
   }
 
   sendRequestToWorker<T>(message: Omit<WorkerRequest, "requestId">) {

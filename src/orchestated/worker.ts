@@ -1,13 +1,14 @@
-import { workerData, parentPort } from "worker_threads"
 import { defaultArchipelago } from "../Archipelago"
 import { IslandUpdates, PeerPositionChange } from "../interfaces"
-import { IslandsCountResponse, IslandsResponse, WorkerMessage, WorkerStatus, WorkerStatusMessage } from "./messageTypes"
+import { IslandsCountResponse, IslandsResponse, WorkerMessage, WorkerStatusMessage } from "./messageTypes"
 
-const archipelago = defaultArchipelago(workerData.archipelagoParameters)
+console.log("Received parameter " + JSON.stringify(process.argv))
+
+const archipelago = defaultArchipelago(JSON.parse(process.argv[2]).archipelagoParameters)
 
 let status: "idle" | "working" = "idle"
 
-parentPort?.on("message", (message: WorkerMessage) => {
+process.on("message", (message: WorkerMessage) => {
   switch (message.type) {
     case "apply-updates":
       applyUpdates(message.updates)
@@ -18,7 +19,7 @@ parentPort?.on("message", (message: WorkerMessage) => {
         payload: archipelago.getIslands(),
         requestId: message.requestId,
       }
-      parentPort?.postMessage(response)
+      process.send!(response)
       break
     }
     case "get-islands-count": {
@@ -27,14 +28,14 @@ parentPort?.on("message", (message: WorkerMessage) => {
         payload: archipelago.getIslandsCount(),
         requestId: message.requestId,
       }
-      parentPort?.postMessage(response)
+      process.send!(response)
       break
     }
   }
 })
 
 function emitUpdates(updates: IslandUpdates) {
-  parentPort?.postMessage({ updates })
+  process.send!({ updates })
 }
 
 function applyUpdates({
@@ -63,7 +64,7 @@ function setStatus(aStatus: "idle" | "working") {
 
 function sendStatus() {
   const message: WorkerStatusMessage = { type: "worker-status", status }
-  parentPort?.postMessage(message)
+  process.send!(message)
 }
 
 setStatus("idle")

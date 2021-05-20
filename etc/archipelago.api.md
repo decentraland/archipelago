@@ -4,7 +4,7 @@
 
 ```ts
 
-import { Worker } from 'worker_threads';
+import { ChildProcess } from 'child_process';
 
 // @public (undocumented)
 export interface Archipelago {
