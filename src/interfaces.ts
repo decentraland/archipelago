@@ -1,4 +1,4 @@
-import { IdGenerator } from "./idGenerator"
+import { IdGenerator } from "./misc/idGenerator"
 
 export type Position3D = [number, number, number]
 
@@ -19,18 +19,21 @@ export type Island = {
 
 export type PeerPositionChange = { id: string; position: Position3D }
 
-export interface Archipelago {
-  getOptions(): ArchipelagoOptions
-  setPeersPositions(...requests: PeerPositionChange[]): IslandUpdates
-  getIslands(): Island[]
-  getIsland(id: string): Island | undefined
-  clearPeers(...ids: string[]): IslandUpdates
-  getPeersCount() : number
-  getIslandsCount() : number
+export type UpdateSubscriber = (updates: IslandUpdates) => any
+
+export interface ArchipelagoController {
+  setPeersPositions(...requests: PeerPositionChange[]): void
+  getIslands(): Promise<Island[]>
+  getIsland(id: string): Promise<Island | undefined>
+  clearPeers(...ids: string[]): void
+  getPeersCount(): Promise<number>
+  getIslandsCount(): Promise<number>
+  subscribeToUpdates(subscriber: UpdateSubscriber): void
+  unsubscribeFromUpdates(subscriber: UpdateSubscriber): void
 }
 
 export type IslandUpdate = {
-  action: 'leave' | 'changeTo'
+  action: "leave" | "changeTo"
   islandId: string
 }
 
@@ -41,4 +44,23 @@ export type ArchipelagoOptions = {
   joinDistance: number
   leaveDistance: number
   islandIdGenerator: IdGenerator
+}
+
+export type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
+
+export type ArchipelagoParameters = MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>
+
+export type Logger = {
+  info(message?: any, ...optionalParams: any[]): void
+  log(message?: any, ...optionalParams: any[]): void
+  error(message?: any, ...optionalParams: any[]): void
+  warn(message?: any, ...optionalParams: any[]): void
+  debug(message?: any, ...optionalParams: any[]): void
+  trace(message?: any, ...optionalParams: any[]): void
+}
+
+export type ArchipelagoControllerOptions = {
+  flushFrequency?: number
+  archipelagoParameters: ArchipelagoParameters
+  logger?: Logger
 }

@@ -1,2 +1,2 @@
 export * from "./interfaces"
-export { defaultArchipelago } from "./Archipelago"
+export { defaultArchipelago } from "./domain/Archipelago"
