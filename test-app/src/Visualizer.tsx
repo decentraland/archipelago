@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react"
-import { Archipelago } from "../../src"
+import { Archipelago } from "../../src/domain/Archipelago"
 
 import * as d3 from "d3"
 
@@ -43,8 +43,8 @@ export function Visualizer({ renderState }: { renderState: Archipelago | null })
         island.peers.forEach((peer) => {
           data.push({
             island: island.id,
-            joinRadius: Math.sqrt(renderState.getOptions().joinDistance) / 2,
-            leaveRadius: Math.sqrt(renderState.getOptions().leaveDistance) / 2,
+            joinRadius: renderState.getOptions().joinDistance / 2, // Since we want to visualize if they intersect with each other and not with each point, we use half radius
+            leaveRadius: renderState.getOptions().leaveDistance / 2,
             peerId: peer.id,
             x: peer.position[0],
             y: peer.position[2],
