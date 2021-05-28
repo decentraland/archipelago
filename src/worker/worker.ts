@@ -1,8 +1,10 @@
 import { WorkerOptions } from "../controller/ArchipelagoController"
 import { Archipelago } from "../domain/Archipelago"
+import { IArchipelago } from "../domain/interfaces"
 import { NullLogger } from "../misc/utils"
 import { IslandUpdates, Logger, PeerPositionChange } from "../types/interfaces"
 import {
+  DisposeResponse,
   IslandResponse,
   IslandsCountResponse,
   IslandsResponse,
@@ -12,7 +14,9 @@ import {
 
 const options: WorkerOptions = JSON.parse(process.argv[2])
 
-const archipelago = new Archipelago(options.archipelagoParameters)
+console.log(`Starting worker with parameters ${JSON.stringify(process.argv)}`)
+
+const archipelago: IArchipelago = new Archipelago(options.archipelagoParameters)
 
 const logger: Logger = options.logging ? console : NullLogger
 
@@ -50,6 +54,13 @@ process.on("message", (message: WorkerMessage) => {
 
       process.send!(response)
       break
+    }
+    case "dispose-request": {
+      const response: DisposeResponse = {
+        type: "dispose-response",
+        requestId: message.requestId,
+      }
+      process.send!(response)
     }
   }
 })

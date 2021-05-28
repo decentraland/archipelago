@@ -56,6 +56,16 @@ export type WorkerRequestError = {
   error: any
 }
 
+export type DisposeRequest = {
+  type: "dispose-request"
+  requestId: string
+}
+
+export type DisposeResponse = {
+  type: "dispose-response"
+  requestId: string
+}
+
 export type WorkerStatus = "working" | "idle" | "unknown"
 
 export type WorkerMessage =
@@ -66,5 +76,5 @@ export type WorkerMessage =
   | WorkerStatusMessage
   | WorkerRequestError
 
-export type WorkerResponse = (IslandsCountResponse | IslandsResponse) & { requestId: string; payload: any }
-export type WorkerRequest = (GetIslands | GetIslandsCount | GetIsland) & { requestId: string }
+export type WorkerResponse = (IslandsCountResponse | IslandsResponse | DisposeResponse) & { requestId: string; payload: any }
+export type WorkerRequest = (GetIslands | GetIslandsCount | GetIsland | DisposeRequest) & { requestId: string }

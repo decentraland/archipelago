@@ -42,7 +42,7 @@ class WorkerController {
     options: Partial<WorkerControllerOptions> = {}
   ) {
     this.worker = fork("./dist/worker/worker.js", [
-      JSON.stringify({ archipelagoParameters: parameters, workerLogging: options.workerLogging ?? true }),
+      JSON.stringify({ archipelagoParameters: parameters, logging: options.workerLogging ?? true }),
     ])
 
     this.worker.on("message", this.handleWorkerMessage.bind(this))
@@ -88,6 +88,11 @@ class WorkerController {
       }, this.options.requestTimeoutMs)
     })
   }
+
+  async dispose() {
+    await this.sendRequestToWorker({ type: "dispose-request" })
+    this.worker.kill()
+  }
 }
 
 export class ArchipelagoControllerImpl implements ArchipelagoController {
@@ -101,6 +106,8 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
 
   workerController: WorkerController
 
+  disposed: boolean = false
+
   constructor(options: ArchipelagoControllerOptions) {
     this.flushFrequency = options.flushFrequency ?? 2
     this.logger = options.logger ?? console
@@ -111,14 +118,16 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
 
   startFlushLoop() {
     const loop = () => {
-      this.flush()
-      setTimeout(loop, this.flushFrequency * 1000)
+      if (!this.disposed) {
+        this.flush()
+        setTimeout(loop, this.flushFrequency * 1000)
+      }
     }
 
     loop()
   }
 
-  flush() {
+  async flush() {
     if (this.pendingUpdates.size > 0 && this.workerController.workerStatus === "idle") {
       console.log(`Flushing ${this.pendingUpdates.size} updates`)
       const updatesToFlush = this.pendingUpdates
@@ -190,6 +199,11 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
         }
       }
     }
+  }
+
+  async dispose() {
+    this.disposed = true
+    await this.workerController.dispose()
   }
 }
 

@@ -1,6 +1,5 @@
 import { sequentialIdGenerator } from "../misc/idGenerator"
 import {
-  ArchipelagoController,
   Position3D,
   PeerData,
   ArchipelagoOptions,

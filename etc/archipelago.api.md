@@ -9,6 +9,10 @@ export interface ArchipelagoController {
     // (undocumented)
     clearPeers(...ids: string[]): void;
     // (undocumented)
+    dispose(): Promise<void>;
+    // (undocumented)
+    flush(): Promise<void>;
+    // (undocumented)
     getIsland(id: string): Promise<Island | undefined>;
     // (undocumented)
     getIslands(): Promise<Island[]>;
@@ -99,7 +103,7 @@ export type UpdateSubscriber = (updates: IslandUpdates) => any;
 
 // Warnings were encountered during analysis:
 //
-// src/types/interfaces.ts:46:3 - (ae-forgotten-export) The symbol "IdGenerator" needs to be exported by the entry point index.d.ts
+// src/types/interfaces.ts:48:3 - (ae-forgotten-export) The symbol "IdGenerator" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 
