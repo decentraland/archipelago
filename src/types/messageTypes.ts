@@ -1,5 +1,5 @@
 import { PeerPositionChange } from ".."
-import { Island, IslandUpdates } from "../interfaces"
+import { Island, IslandUpdates } from "./interfaces"
 
 export type ApplyUpdates = {
   type: "apply-updates"
@@ -8,15 +8,18 @@ export type ApplyUpdates = {
 
 export type GetIslands = {
   type: "get-islands"
+  requestId: string
 }
 
 export type GetIsland = {
   type: "get-island"
   islandId: string
+  requestId: string
 }
 
 export type GetIslandsCount = {
   type: "get-islands-count"
+  requestId: string
 }
 
 export type IslandsUpdated = {
@@ -27,11 +30,19 @@ export type IslandsUpdated = {
 export type IslandsCountResponse = {
   type: "islands-count-response"
   payload: number
+  requestId: string
 }
 
 export type IslandsResponse = {
   type: "islands-response"
   payload: Island[]
+  requestId: string
+}
+
+export type IslandResponse = {
+  type: "island-response"
+  payload: Island | undefined
+  requestId: string
 }
 
 export type WorkerStatusMessage = {

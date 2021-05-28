@@ -1,19 +1,17 @@
 import {
   ArchipelagoController,
   ArchipelagoControllerOptions,
-  ArchipelagoOptions,
   ArchipelagoParameters,
   Island,
   Logger,
-  MandatoryArchipelagoOptions,
   PeerData,
   PeerPositionChange,
   Position3D,
   UpdateSubscriber,
-} from "../interfaces"
+} from "../types/interfaces"
 
 import { fork, ChildProcess } from "child_process"
-import { GetIsland, WorkerMessage, WorkerRequest, WorkerResponse, WorkerStatus } from "./messageTypes"
+import { GetIsland, WorkerMessage, WorkerRequest, WorkerResponse, WorkerStatus } from "../types/messageTypes"
 import { IdGenerator, sequentialIdGenerator } from "../misc/idGenerator"
 
 type SetPositionUpdate = { type: "set-position"; position: Position3D }
@@ -21,10 +19,11 @@ type ClearUpdate = { type: "clear" }
 
 type PeerUpdate = SetPositionUpdate | ClearUpdate
 
-type WorkerControllerOptions = { requestTimeoutMs: number }
+type WorkerControllerOptions = { requestTimeoutMs: number; workerLogging?: boolean }
 
 type PendingWorkerRequest = { resolve: (arg: any) => any; reject: (error: any) => any }
 
+export type WorkerOptions = { archipelagoParameters: ArchipelagoParameters; logging: boolean }
 class WorkerController {
   worker: ChildProcess
   workerStatus: WorkerStatus = "unknown"
@@ -42,7 +41,9 @@ class WorkerController {
     parameters: ArchipelagoParameters,
     options: Partial<WorkerControllerOptions> = {}
   ) {
-    this.worker = fork("./dist/worker/worker.js", [JSON.stringify({ archipelagoParameters: parameters })])
+    this.worker = fork("./dist/worker/worker.js", [
+      JSON.stringify({ archipelagoParameters: parameters, workerLogging: options.workerLogging ?? true }),
+    ])
 
     this.worker.on("message", this.handleWorkerMessage.bind(this))
 
@@ -153,7 +154,7 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
   }
 
   getIsland(id: string): Promise<Island | undefined> {
-    const req: GetIsland = { type: "get-island", islandId: id }
+    const req: Omit<GetIsland, "requestId"> = { type: "get-island", islandId: id }
 
     return this.workerController.sendRequestToWorker(req)
   }

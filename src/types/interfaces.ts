@@ -1,4 +1,4 @@
-import { IdGenerator } from "./misc/idGenerator"
+import { IdGenerator } from "../misc/idGenerator"
 
 export type Position3D = [number, number, number]
 

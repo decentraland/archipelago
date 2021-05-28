@@ -8,7 +8,7 @@ import {
   PeerPositionChange,
   Island,
   ArchipelagoParameters,
-} from "../interfaces"
+} from "../types/interfaces"
 import { findMax, popFirstByOrder, popMax } from "../misc/utils"
 
 const X_AXIS = 0
@@ -79,7 +79,7 @@ export class Archipelago {
   /**
    * This returns a map containing the peers that left or changed island as keys, how they changed as values
    * */
-  setPeersPositions(...changes: PeerPositionChange[]): IslandUpdates {
+  setPeersPositions(changes: PeerPositionChange[]): IslandUpdates {
     let updates: IslandUpdates = {}
     const affectedIslands: Set<string> = new Set()
     for (const { id, position } of changes) {
@@ -100,7 +100,7 @@ export class Archipelago {
     return this.updateIslands(updates, affectedIslands)
   }
 
-  clearPeers(...ids: string[]): IslandUpdates {
+  clearPeers(ids: string[]): IslandUpdates {
     let updates: IslandUpdates = {}
     const affectedIslands: Set<string> = new Set()
     for (const id of ids) {

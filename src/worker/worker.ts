@@ -1,10 +1,20 @@
-import { defaultArchipelago } from "../domain/Archipelago"
-import { IslandUpdates, PeerPositionChange } from "../interfaces"
-import { IslandsCountResponse, IslandsResponse, WorkerMessage, WorkerStatusMessage } from "./messageTypes"
+import { WorkerOptions } from "../controller/ArchipelagoController"
+import { Archipelago } from "../domain/Archipelago"
+import { NullLogger } from "../misc/utils"
+import { IslandUpdates, Logger, PeerPositionChange } from "../types/interfaces"
+import {
+  IslandResponse,
+  IslandsCountResponse,
+  IslandsResponse,
+  WorkerMessage,
+  WorkerStatusMessage,
+} from "../types/messageTypes"
 
-console.log("Received parameter " + JSON.stringify(process.argv))
+const options: WorkerOptions = JSON.parse(process.argv[2])
 
-const archipelago = defaultArchipelago(JSON.parse(process.argv[2]).archipelagoParameters)
+const archipelago = new Archipelago(options.archipelagoParameters)
+
+const logger: Logger = options.logging ? console : NullLogger
 
 let status: "idle" | "working" = "idle"
 
@@ -31,6 +41,16 @@ process.on("message", (message: WorkerMessage) => {
       process.send!(response)
       break
     }
+    case "get-island": {
+      const response: IslandResponse = {
+        type: "island-response",
+        payload: archipelago.getIsland(message.islandId),
+        requestId: message.requestId,
+      }
+
+      process.send!(response)
+      break
+    }
   }
 })
 
@@ -48,23 +68,25 @@ function applyUpdates({
   setStatus("working")
   const startTime = Date.now()
 
-  console.log(`Processing ${positionUpdates.length} position updates and ${clearUpdates.length} clear updates`)
+  logger.debug(`Processing ${positionUpdates.length} position updates and ${clearUpdates.length} clear updates`)
   emitUpdates(archipelago.clearPeers(clearUpdates))
   emitUpdates(archipelago.setPeersPositions(positionUpdates))
 
-  console.log(`Processing updates took: ${Date.now() - startTime}`)
+  logger.debug(`Processing updates took: ${Date.now() - startTime}`)
 
   setStatus("idle")
 }
 
 function setStatus(aStatus: "idle" | "working") {
+  logger.info(`Setting worker status to ${aStatus}`)
   status = aStatus
   sendStatus()
 }
 
 function sendStatus() {
   const message: WorkerStatusMessage = { type: "worker-status", status }
-  process.send!(message)
+  process.send?.(message)
 }
 
+logger.info("Worker started")
 setStatus("idle")
