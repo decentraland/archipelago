@@ -1,4 +1,5 @@
 export * from "./interfaces"
 export { defaultArchipelago } from "./Archipelago"
 export { bufferedArchipelago } from "./BufferedArchipelago"
+export { bufferedArchipelago2 } from "./BufferedArchipelago2"
 export { orchestatedArchipelago } from "./orchestated/Orchestator"
