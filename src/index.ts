@@ -1,2 +1,2 @@
-export * from "./interfaces"
-export { defaultArchipelago } from "./Archipelago"
+export * from "./types/interfaces"
+export { defaultArchipelagoController } from "./controller/ArchipelagoController"

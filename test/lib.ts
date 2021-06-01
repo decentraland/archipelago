@@ -1,11 +1,12 @@
-import { Archipelago, ArchipelagoOptions, defaultArchipelago, PeerPositionChange, Position3D } from "../src"
+import { ArchipelagoOptions, PeerPositionChange, Position3D } from "../src"
+import { Archipelago } from "../src/domain/Archipelago"
 import { BaseClosure, evaluate } from "tiny-clojure"
 import { NodeError } from "tiny-clojure/dist/types"
 import assert from "assert"
 import get from "lodash.get"
 import deepEqual from "fast-deep-equal"
 import { createRandomizer } from "./random"
-import { IdGenerator, sequentialIdGenerator } from "../src/idGenerator"
+import { IdGenerator, sequentialIdGenerator } from "../src/misc/idGenerator"
 
 export const defaultArchipelagoOptions = { joinDistance: 64, leaveDistance: 80 }
 
@@ -49,7 +50,7 @@ export function setMultiplePeersAround(
     requests.push({ id: idGenerator.generateId(), position: randomizer.generatePositionAround(position, offset) })
   }
 
-  archipelago.setPeersPositions(...requests)
+  archipelago.setPeersPositions(requests)
 
   return requests
 }
@@ -57,13 +58,13 @@ export function setMultiplePeersAround(
 export function configureLibs(closure: BaseClosure) {
   // (configure { options })
   closure.defJsFunction("configure", (options?: ArchipelagoOptions) => {
-    closure.def("archipelago", defaultArchipelago(options ?? defaultArchipelagoOptions))
+    closure.def("archipelago", new Archipelago(options ?? defaultArchipelagoOptions))
   })
 
   // (move ...[peer x y z])
   closure.defJsFunction("move", (...args: [string, number, number, number][]) => {
     const archipelago = closure.get("archipelago") as Archipelago
-    archipelago.setPeersPositions(...args.map(([id, ...position]) => ({ id, position })))
+    archipelago.setPeersPositions(args.map(([id, ...position]) => ({ id, position })))
   })
 
   // (getIslands archipelago?)
@@ -101,9 +102,9 @@ export function configureLibs(closure: BaseClosure) {
   closure.defJsFunction("disconnect", (ids, arch) => {
     const archipelago = (arch || closure.get("archipelago")) as Archipelago
     if (typeof ids == "string") {
-      assert(archipelago.clearPeers(ids)[ids].action === "leave", `Peer ${ids} must be deleted`)
+      assert(archipelago.clearPeers([ids])[ids].action === "leave", `Peer ${ids} must be deleted`)
     } else if (Array.isArray(ids)) {
-      const updates = archipelago.clearPeers(...ids)
+      const updates = archipelago.clearPeers(ids)
       ids.forEach(($: any) => assert(updates[$].action === "leave", `Peer ${$} must be deleted`))
     } else throw new Error("Invalid argument")
   })

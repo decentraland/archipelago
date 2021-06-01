@@ -1,3 +1,5 @@
+import { Logger } from "../types/interfaces"
+
 /**
  * Finds the index of the element that is first according to the provided ordering
  * @param array the array in which to look up the index
@@ -58,4 +60,13 @@ export function isEmpty(obj: Record<any, any>) {
   }
 
   return JSON.stringify(obj) === JSON.stringify({})
+}
+
+export const NullLogger: Logger = {
+  info(message?: any, ...optionalParams: any[]) {},
+  log(message?: any, ...optionalParams: any[]) {},
+  error(message?: any, ...optionalParams: any[]) {},
+  warn(message?: any, ...optionalParams: any[]) {},
+  debug(message?: any, ...optionalParams: any[]) {},
+  trace(message?: any, ...optionalParams: any[]) {},
 }

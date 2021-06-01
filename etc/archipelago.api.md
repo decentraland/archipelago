@@ -5,36 +5,81 @@
 ```ts
 
 // @public (undocumented)
-export interface Archipelago {
+export interface ArchipelagoController {
     // (undocumented)
-    clearPeer(id: string): boolean;
+    clearPeers(...ids: string[]): void;
     // (undocumented)
-    getIsland(id: string): Island | undefined;
+    dispose(): Promise<void>;
     // (undocumented)
-    getIslands(): Island[];
+    flush(): Promise<void>;
     // (undocumented)
-    setPeerPosition(id: string, position: Position3D): void;
+    getIsland(id: string): Promise<Island | undefined>;
+    // (undocumented)
+    getIslands(): Promise<Island[]>;
+    // (undocumented)
+    getIslandsCount(): Promise<number>;
+    // (undocumented)
+    getPeersCount(): Promise<number>;
+    // (undocumented)
+    setPeersPositions(...requests: PeerPositionChange[]): void;
+    // (undocumented)
+    subscribeToUpdates(subscriber: UpdateSubscriber): void;
+    // (undocumented)
+    unsubscribeFromUpdates(subscriber: UpdateSubscriber): void;
 }
+
+// @public (undocumented)
+export type ArchipelagoControllerOptions = {
+    flushFrequency?: number;
+    archipelagoParameters: ArchipelagoParameters;
+    logger?: Logger;
+};
 
 // @public (undocumented)
 export type ArchipelagoOptions = {
     maxPeersPerIsland: number;
     joinDistance: number;
     leaveDistance: number;
-    distanceFunction: (a: Position3D, b: Position3D) => number;
+    islandIdGenerator: IdGenerator;
 };
 
-// Warning: (ae-forgotten-export) The symbol "MandatoryArchipelagoOptions" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export function defaultArchipelago(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>): Archipelago;
+export type ArchipelagoParameters = MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>;
+
+// @public (undocumented)
+export function defaultArchipelagoController(options: ArchipelagoControllerOptions): ArchipelagoController;
 
 // @public (undocumented)
 export type Island = {
     id: string;
     peers: PeerData[];
     maxPeers: number;
+    center: Position3D;
+    radius: number;
+    sequenceId: number;
 };
+
+// @public (undocumented)
+export type IslandUpdate = {
+    action: "leave" | "changeTo";
+    islandId: string;
+};
+
+// @public (undocumented)
+export type IslandUpdates = Record<string, IslandUpdate>;
+
+// @public (undocumented)
+export type Logger = {
+    info(message?: any, ...optionalParams: any[]): void;
+    log(message?: any, ...optionalParams: any[]): void;
+    error(message?: any, ...optionalParams: any[]): void;
+    warn(message?: any, ...optionalParams: any[]): void;
+    debug(message?: any, ...optionalParams: any[]): void;
+    trace(message?: any, ...optionalParams: any[]): void;
+};
+
+// @public (undocumented)
+export type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">;
 
 // @public (undocumented)
 export type PeerData = {
@@ -44,8 +89,21 @@ export type PeerData = {
 };
 
 // @public (undocumented)
+export type PeerPositionChange = {
+    id: string;
+    position: Position3D;
+};
+
+// @public (undocumented)
 export type Position3D = [number, number, number];
 
+// @public (undocumented)
+export type UpdateSubscriber = (updates: IslandUpdates) => any;
+
+
+// Warnings were encountered during analysis:
+//
+// src/types/interfaces.ts:48:3 - (ae-forgotten-export) The symbol "IdGenerator" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

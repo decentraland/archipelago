@@ -1,16 +1,14 @@
-import { sequentialIdGenerator } from "./idGenerator"
+import { sequentialIdGenerator } from "../misc/idGenerator"
 import {
-  Archipelago,
   Position3D,
   PeerData,
   ArchipelagoOptions,
   IslandUpdates,
   PeerPositionChange,
   Island,
-} from "./interfaces"
-import { findMax, popFirstByOrder, popMax } from "./utils"
-
-type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
+  ArchipelagoParameters,
+} from "../types/interfaces"
+import { findMax, popFirstByOrder, popMax } from "../misc/utils"
 
 const X_AXIS = 0
 const Y_AXIS = 1
@@ -57,7 +55,7 @@ type InternalIsland = Island & {
   _recalculateGeometryIfNeeded: () => void
 }
 
-class ArchipelagoImpl implements Archipelago {
+export class Archipelago {
   private peers: Map<string, PeerData> = new Map()
   private islands: Map<string, InternalIsland> = new Map()
 
@@ -69,7 +67,7 @@ class ArchipelagoImpl implements Archipelago {
     return this.options.islandIdGenerator.generateId()
   }
 
-  constructor(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>) {
+  constructor(options: ArchipelagoParameters) {
     this.options = { ...defaultOptions(), ...options }
   }
 
@@ -80,7 +78,7 @@ class ArchipelagoImpl implements Archipelago {
   /**
    * This returns a map containing the peers that left or changed island as keys, how they changed as values
    * */
-  setPeersPositions(...changes: PeerPositionChange[]): IslandUpdates {
+  setPeersPositions(changes: PeerPositionChange[]): IslandUpdates {
     let updates: IslandUpdates = {}
     const affectedIslands: Set<string> = new Set()
     for (const { id, position } of changes) {
@@ -101,7 +99,7 @@ class ArchipelagoImpl implements Archipelago {
     return this.updateIslands(updates, affectedIslands)
   }
 
-  clearPeers(...ids: string[]): IslandUpdates {
+  clearPeers(ids: string[]): IslandUpdates {
     let updates: IslandUpdates = {}
     const affectedIslands: Set<string> = new Set()
     for (const id of ids) {
@@ -331,8 +329,4 @@ class ArchipelagoImpl implements Archipelago {
   getIslandsCount(): number {
     return this.islands.size
   }
-}
-
-export function defaultArchipelago(options: MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>): Archipelago {
-  return new ArchipelagoImpl(options)
 }
