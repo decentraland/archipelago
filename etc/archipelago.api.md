@@ -50,6 +50,12 @@ export type ArchipelagoParameters = MandatoryArchipelagoOptions & Partial<Archip
 export function defaultArchipelagoController(options: ArchipelagoControllerOptions): ArchipelagoController;
 
 // @public (undocumented)
+export interface IdGenerator {
+    // (undocumented)
+    generateId(): string;
+}
+
+// @public (undocumented)
 export type Island = {
     id: string;
     peers: PeerData[];
@@ -100,10 +106,6 @@ export type Position3D = [number, number, number];
 // @public (undocumented)
 export type UpdateSubscriber = (updates: IslandUpdates) => any;
 
-
-// Warnings were encountered during analysis:
-//
-// src/types/interfaces.ts:48:3 - (ae-forgotten-export) The symbol "IdGenerator" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 
