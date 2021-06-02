@@ -19,7 +19,11 @@ export interface ArchipelagoController {
     // (undocumented)
     getIslandsCount(): Promise<number>;
     // (undocumented)
+    getPeerData(id: string): Promise<PeerData | undefined>;
+    // (undocumented)
     getPeersCount(): Promise<number>;
+    // (undocumented)
+    getPeersData(ids: string[]): Promise<Record<string, PeerData>>;
     // (undocumented)
     setPeersPositions(...requests: PeerPositionChange[]): void;
     // (undocumented)

@@ -17,6 +17,9 @@ build:
 	rm -rf node_modules/@microsoft/api-extractor/node_modules/typescript || true
 	./node_modules/.bin/api-extractor run $(LOCAL_ARG) --typescript-compiler-folder ./node_modules/typescript
 
+benchmark: build
+	./node_modules/.bin/ts-node benchmark/simple.ts
+
 node_modules:
 	npm ci
 	@cd test-app; npm ci

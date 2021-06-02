@@ -11,7 +11,7 @@ const MAX_PEERS_PER_ISLAND = process.env.MAX_PEERS_PER_ISLAND
   ? parseInt(process.env.MAX_PEERS_PER_ISLAND)
   : defaultOptions().maxPeersPerIsland
 const SEED = process.env.SEED ? process.env.SEED : `${seedrandom()()}`
-const TARGET_PEERS = parseInt(process.env.TARGET_PEERS ?? "5000")
+const TARGET_PEERS = parseInt(process.env.TARGET_PEERS ?? "20000")
 const DISCONNECT_CHANCE = parseFloat(process.env.DISCONNECT_CHANCE ?? "0.01")
 const HOTSPOT_CHANCE = parseFloat(process.env.HOTSPOT_CHANCE ?? "0.95")
 const TELEPORT_CHANCE = parseFloat(process.env.TELEPORT_CHANCE ?? "0.01")

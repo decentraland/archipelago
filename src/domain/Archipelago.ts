@@ -123,6 +123,10 @@ export class Archipelago implements IArchipelago {
     return this.updateIslands(updates, affectedIslands)
   }
 
+  getPeerData(id: string): PeerData | undefined {
+    return this.peers.get(id)
+  }
+
   private clearPeerFromIsland(id: string, island: InternalIsland) {
     const idx = island.peers.findIndex((it) => it.id === id)
     if (idx >= 0) {
