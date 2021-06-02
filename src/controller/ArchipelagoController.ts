@@ -100,7 +100,7 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
 
   updatesSubscribers: Set<UpdateSubscriber> = new Set()
 
-  activePeers: Map<string, PeerData> = new Map()
+  activePeers: Set<string> = new Set()
   flushFrequency: number
   logger: Logger
 
@@ -116,11 +116,13 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
     this.startFlushLoop()
   }
 
-  startFlushLoop() {
+  private startFlushLoop() {
     const loop = () => {
       if (!this.disposed) {
+        const startTime = Date.now()
         this.flush()
-        setTimeout(loop, this.flushFrequency * 1000)
+        const flushElapsed = Date.now() - startTime
+        setTimeout(loop, Math.max(this.flushFrequency * 1000 - flushElapsed), 1) // At least 1 ms between flushes
       }
     }
 
@@ -151,7 +153,7 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
   setPeersPositions(...requests: PeerPositionChange[]): void {
     for (const req of requests) {
       if (!this.activePeers.has(req.id)) {
-        this.activePeers.set(req.id, { id: req.id, position: req.position })
+        this.activePeers.add(req.id)
       }
 
       this.pendingUpdates.set(req.id, { type: "set-position", position: req.position })

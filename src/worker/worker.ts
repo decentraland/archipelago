@@ -80,8 +80,9 @@ function applyUpdates({
   const startTime = Date.now()
 
   logger.debug(`Processing ${positionUpdates.length} position updates and ${clearUpdates.length} clear updates`)
-  emitUpdates(archipelago.clearPeers(clearUpdates))
-  emitUpdates(archipelago.setPeersPositions(positionUpdates))
+  
+  const updates = { ...archipelago.clearPeers(clearUpdates), ...archipelago.setPeersPositions(positionUpdates) }
+  emitUpdates(updates)
 
   logger.debug(`Processing updates took: ${Date.now() - startTime}`)
 

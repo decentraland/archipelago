@@ -66,3 +66,5 @@ export type ArchipelagoControllerOptions = {
   archipelagoParameters: ArchipelagoParameters
   logger?: Logger
 }
+
+export { IdGenerator } from "../misc/idGenerator"
