@@ -10,6 +10,7 @@ import {
   IslandResponse,
   IslandsCountResponse,
   IslandsResponse,
+  IslandsUpdated,
   WorkerMessage,
   WorkerStatusMessage,
 } from "../types/messageTypes"
@@ -102,7 +103,11 @@ function getPeersData(peerIds: string[]): Record<string, PeerData> {
 }
 
 function emitUpdates(updates: IslandUpdates) {
-  process.send!({ updates })
+  const updatesMessage: IslandsUpdated = {
+    type: "islands-updated",
+    islandUpdates: updates
+  }
+  process.send!(updatesMessage)
 }
 
 function applyUpdates({

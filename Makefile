@@ -6,10 +6,10 @@ WEBAPP_SOURCES_TSX := $(wildcard test-app/**/*.tsx)
 LOCAL_ARG = --local --verbose --diagnostics # for now we don't want to fail in CI on warnings because we won't be releasing this anytime soon.
 #endif
 
-test:
+test: build
 	TS_NODE_PROJECT=test/tsconfig.json ./node_modules/.bin/mocha $(TESTARGS)
 
-test-watch:
+test-watch: build
 	TS_NODE_PROJECT=test/tsconfig.json ./node_modules/.bin/mocha --watch $(TESTARGS)
 
 build:

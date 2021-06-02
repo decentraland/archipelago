@@ -1,4 +1,4 @@
-import { ArchipelagoOptions, PeerPositionChange, Position3D } from "../src"
+import { ArchipelagoController, ArchipelagoOptions, Island, PeerPositionChange, Position3D } from "../src"
 import { Archipelago } from "../src/domain/Archipelago"
 import { BaseClosure, evaluate } from "tiny-clojure"
 import { NodeError } from "tiny-clojure/dist/types"
@@ -12,9 +12,13 @@ export const defaultArchipelagoOptions = { joinDistance: 64, leaveDistance: 80 }
 
 export function expectIslandWith(archipelago: Archipelago, ...ids: string[]) {
   assert(Array.isArray(ids))
-  const sortedIds = ids.sort()
   assert("getIslands" in archipelago)
   const islands = archipelago.getIslands()
+  expectIslandWithPeerIdsIn(ids, islands)
+}
+
+function expectIslandWithPeerIdsIn(ids: string[], islands: Island[]) {
+  const sortedIds = ids.sort()
   const condition = islands.some((it) => deepEqual(it.peers.map((peer) => peer.id).sort(), sortedIds))
   if (!condition) {
     throw new Error(
@@ -31,6 +35,14 @@ export function expectIslandsWith(archipelago: Archipelago, ...islandIds: string
   assert(Array.isArray(islandIds))
   islandIds.forEach((ids) => expectIslandWith(archipelago, ...ids))
   assert.strictEqual(archipelago.getIslands().length, islandIds.length)
+}
+
+export async function expectIslandInControllerWith(archipelago: ArchipelagoController, ...peerIds: string[]) {
+  expectIslandWithPeerIdsIn(peerIds, await archipelago.getIslands())
+}
+
+export async function expectIslandsInControllerWith(archipelago: ArchipelagoController, ...peerGroups: string[][]) {
+  await Promise.all(peerGroups.map((ids) => expectIslandInControllerWith(archipelago, ...ids)))
 }
 
 export function expectIslandsCount(archipelago: Archipelago, count: number) {
@@ -201,4 +213,30 @@ export function configureLibs(closure: BaseClosure) {
       throw e
     }
   })
+}
+
+export function delay(time: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, time))
+}
+
+export async function whileTrue(
+  condition: () => boolean,
+  messageIfFailed: string = "no message specified",
+  timeout: number = 1000
+) {
+  const started = Date.now()
+  while (condition()) {
+    if (Date.now() - started > timeout) {
+      throw new Error("Timed out awaiting condition: " + messageIfFailed)
+    }
+    await delay(5)
+  }
+}
+
+export async function untilTrue(
+  condition: () => boolean,
+  messageIfFailed: string = "no message specified",
+  timeout: number = 1000
+) {
+  await whileTrue(() => !condition(), messageIfFailed, timeout)
 }
