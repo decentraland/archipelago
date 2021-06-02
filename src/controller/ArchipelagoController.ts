@@ -13,8 +13,8 @@ import {
 import { fork, ChildProcess } from "child_process"
 import {
   GetIsland,
-  GetPeerDataResponse,
-  GetPeersDataResponse,
+  GetPeerData,
+  GetPeersData,
   WorkerMessage,
   WorkerRequest,
   WorkerResponse,
@@ -217,11 +217,13 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
   }
 
   async getPeerData(id: string): Promise<PeerData | undefined> {
-    return (await this.workerController.sendRequestToWorker<GetPeerDataResponse>({ type: "get-peer-data" })).payload
+    const request: Omit<GetPeerData, "requestId"> = { type: "get-peer-data", peerId: id }
+    return await this.workerController.sendRequestToWorker(request)
   }
 
   async getPeersData(ids: string[]): Promise<Record<string, PeerData>> {
-    return (await this.workerController.sendRequestToWorker<GetPeersDataResponse>({ type: "get-peers-data" })).payload
+    const request: Omit<GetPeersData, "requestId"> = { type: "get-peers-data", peerIds: ids }
+    return await this.workerController.sendRequestToWorker(request)
   }
 }
 
