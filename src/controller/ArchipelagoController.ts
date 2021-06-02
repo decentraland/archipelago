@@ -11,7 +11,15 @@ import {
 } from "../types/interfaces"
 
 import { fork, ChildProcess } from "child_process"
-import { GetIsland, WorkerMessage, WorkerRequest, WorkerResponse, WorkerStatus } from "../types/messageTypes"
+import {
+  GetIsland,
+  GetPeerDataResponse,
+  GetPeersDataResponse,
+  WorkerMessage,
+  WorkerRequest,
+  WorkerResponse,
+  WorkerStatus,
+} from "../types/messageTypes"
 import { IdGenerator, sequentialIdGenerator } from "../misc/idGenerator"
 
 type SetPositionUpdate = { type: "set-position"; position: Position3D }
@@ -45,9 +53,9 @@ class WorkerController {
       JSON.stringify({ archipelagoParameters: parameters, logging: options.workerLogging ?? true }),
     ])
 
-    this.worker.on("message", this.handleWorkerMessage.bind(this))
-
     this.messageHandler = messageHandler
+
+    this.worker.on("message", this.handleWorkerMessage.bind(this))
 
     this.options = { requestTimeoutMs: 10 * 1000, ...options }
   }
@@ -206,6 +214,14 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
   async dispose() {
     this.disposed = true
     await this.workerController.dispose()
+  }
+
+  async getPeerData(id: string): Promise<PeerData | undefined> {
+    return (await this.workerController.sendRequestToWorker<GetPeerDataResponse>({ type: "get-peer-data" })).payload
+  }
+
+  async getPeersData(ids: string[]): Promise<Record<string, PeerData>> {
+    return (await this.workerController.sendRequestToWorker<GetPeersDataResponse>({ type: "get-peers-data" })).payload
   }
 }
 

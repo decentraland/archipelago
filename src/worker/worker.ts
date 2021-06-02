@@ -2,9 +2,11 @@ import { WorkerOptions } from "../controller/ArchipelagoController"
 import { Archipelago } from "../domain/Archipelago"
 import { IArchipelago } from "../domain/interfaces"
 import { NullLogger } from "../misc/utils"
-import { IslandUpdates, Logger, PeerPositionChange } from "../types/interfaces"
+import { IslandUpdates, Logger, PeerData, PeerPositionChange } from "../types/interfaces"
 import {
   DisposeResponse,
+  GetPeerDataResponse,
+  GetPeersDataResponse,
   IslandResponse,
   IslandsCountResponse,
   IslandsResponse,
@@ -55,15 +57,49 @@ process.on("message", (message: WorkerMessage) => {
       process.send!(response)
       break
     }
+    case "get-peer-data": {
+      const response: GetPeerDataResponse = {
+        type: "get-peer-data-response",
+        payload: archipelago.getPeerData(message.peerId),
+        requestId: message.requestId,
+      }
+
+      process.send!(response)
+      break
+    }
+    case "get-peers-data": {
+      const response: GetPeersDataResponse = {
+        type: "get-peers-data-response",
+        payload: getPeersData(message.peerIds),
+        requestId: message.requestId,
+      }
+
+      process.send!(response)
+      break
+    }
     case "dispose-request": {
       const response: DisposeResponse = {
         type: "dispose-response",
         requestId: message.requestId,
+        payload: null,
       }
       process.send!(response)
+      break
     }
   }
 })
+
+function getPeersData(peerIds: string[]): Record<string, PeerData> {
+  const response: Record<string, PeerData> = {}
+  for (const id of peerIds) {
+    const data = archipelago.getPeerData(id)
+    if (typeof data !== "undefined") {
+      response[id] = data
+    }
+  }
+
+  return response
+}
 
 function emitUpdates(updates: IslandUpdates) {
   process.send!({ updates })
@@ -80,7 +116,7 @@ function applyUpdates({
   const startTime = Date.now()
 
   logger.debug(`Processing ${positionUpdates.length} position updates and ${clearUpdates.length} clear updates`)
-  
+
   const updates = { ...archipelago.clearPeers(clearUpdates), ...archipelago.setPeersPositions(positionUpdates) }
   emitUpdates(updates)
 

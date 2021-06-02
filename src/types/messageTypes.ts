@@ -1,49 +1,50 @@
 import { PeerPositionChange } from ".."
-import { Island, IslandUpdates } from "./interfaces"
+import { Island, IslandUpdates, PeerData } from "./interfaces"
 
 export type ApplyUpdates = {
   type: "apply-updates"
   updates: { positionUpdates: PeerPositionChange[]; clearUpdates: string[] }
 }
 
+type Request = { requestId: string }
+
 export type GetIslands = {
   type: "get-islands"
-  requestId: string
-}
+} & Request
 
 export type GetIsland = {
   type: "get-island"
   islandId: string
-  requestId: string
-}
+} & Request
 
 export type GetIslandsCount = {
   type: "get-islands-count"
-  requestId: string
-}
+} & Request
 
 export type IslandsUpdated = {
   type: "islands-updated"
   islandUpdates: IslandUpdates
 }
 
+type Response = {
+  requestId: string
+  payload: any
+}
+
 export type IslandsCountResponse = {
   type: "islands-count-response"
   payload: number
-  requestId: string
-}
+} & Response
 
 export type IslandsResponse = {
   type: "islands-response"
   payload: Island[]
-  requestId: string
-}
+} & Response
 
 export type IslandResponse = {
   type: "island-response"
   payload: Island | undefined
-  requestId: string
-}
+} & Response
 
 export type WorkerStatusMessage = {
   type: "worker-status"
@@ -58,13 +59,32 @@ export type WorkerRequestError = {
 
 export type DisposeRequest = {
   type: "dispose-request"
-  requestId: string
-}
+} & Request
 
 export type DisposeResponse = {
   type: "dispose-response"
   requestId: string
-}
+} & Response
+
+export type GetPeerData = {
+  type: "get-peer-data"
+  peerId: string
+} & Request
+
+export type GetPeerDataResponse = {
+  type: "get-peer-data-response"
+  payload: PeerData | undefined
+} & Response
+
+export type GetPeersData = {
+  type: "get-peers-data"
+  peerIds: string[]
+} & Request
+
+export type GetPeersDataResponse = {
+  type: "get-peers-data-response"
+  payload: Record<string, PeerData>
+} & Response
 
 export type WorkerStatus = "working" | "idle" | "unknown"
 
@@ -75,6 +95,8 @@ export type WorkerMessage =
   | IslandsUpdated
   | WorkerStatusMessage
   | WorkerRequestError
+  | GetPeerData
+  | GetPeersData
 
-export type WorkerResponse = (IslandsCountResponse | IslandsResponse | DisposeResponse) & { requestId: string; payload: any }
-export type WorkerRequest = (GetIslands | GetIslandsCount | GetIsland | DisposeRequest) & { requestId: string }
+export type WorkerResponse = IslandsCountResponse | IslandsResponse | DisposeResponse | GetPeerDataResponse | GetPeersDataResponse
+export type WorkerRequest = GetIslands | GetIslandsCount | GetIsland | DisposeRequest | GetPeerData | GetPeersData
