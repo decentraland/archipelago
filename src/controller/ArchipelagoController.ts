@@ -218,12 +218,12 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
 
   async getPeerData(id: string): Promise<PeerData | undefined> {
     const request: Omit<GetPeerData, "requestId"> = { type: "get-peer-data", peerId: id }
-    return await this.workerController.sendRequestToWorker(request)
+    return this.workerController.sendRequestToWorker(request)
   }
 
   async getPeersData(ids: string[]): Promise<Record<string, PeerData>> {
     const request: Omit<GetPeersData, "requestId"> = { type: "get-peers-data", peerIds: ids }
-    return await this.workerController.sendRequestToWorker(request)
+    return this.workerController.sendRequestToWorker(request)
   }
 }
 
