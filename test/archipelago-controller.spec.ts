@@ -10,6 +10,7 @@ describe("archipelago controller", () => {
     controller = defaultArchipelagoController({
       archipelagoParameters: { joinDistance: 64, leaveDistance: 80 },
       flushFrequency: 0.05,
+      workerSrcPath: "./dist/worker/worker.js"
     })
 
     controller.subscribeToUpdates((updates) => receivedUpdates.push(updates))

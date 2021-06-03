@@ -37,6 +37,7 @@ export type ArchipelagoControllerOptions = {
     flushFrequency?: number;
     archipelagoParameters: ArchipelagoParameters;
     logger?: Logger;
+    workerSrcPath?: string;
 };
 
 // @public (undocumented)

@@ -67,6 +67,7 @@ export type ArchipelagoControllerOptions = {
   flushFrequency?: number
   archipelagoParameters: ArchipelagoParameters
   logger?: Logger
+  workerSrcPath?: string
 }
 
 export { IdGenerator } from "../misc/idGenerator"

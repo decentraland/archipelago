@@ -27,7 +27,7 @@ type ClearUpdate = { type: "clear" }
 
 type PeerUpdate = SetPositionUpdate | ClearUpdate
 
-type WorkerControllerOptions = { requestTimeoutMs: number; workerLogging?: boolean }
+type WorkerControllerOptions = { requestTimeoutMs: number; workerLogging?: boolean; workerSrcPath?: string }
 
 type PendingWorkerRequest = { resolve: (arg: any) => any; reject: (error: any) => any }
 
@@ -49,7 +49,9 @@ class WorkerController {
     parameters: ArchipelagoParameters,
     options: Partial<WorkerControllerOptions> = {}
   ) {
-    this.worker = fork("./dist/worker/worker.js", [
+    const workerSrcPath = options.workerSrcPath ?? __dirname + "/../worker/worker.js"
+
+    this.worker = fork(workerSrcPath, [
       JSON.stringify({ archipelagoParameters: parameters, logging: options.workerLogging ?? true }),
     ])
 
@@ -119,7 +121,9 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
   constructor(options: ArchipelagoControllerOptions) {
     this.flushFrequency = options.flushFrequency ?? 2
     this.logger = options.logger ?? console
-    this.workerController = new WorkerController(this.handleWorkerMessage.bind(this), options.archipelagoParameters)
+    this.workerController = new WorkerController(this.handleWorkerMessage.bind(this), options.archipelagoParameters, {
+      workerSrcPath: options.workerSrcPath,
+    })
 
     this.startFlushLoop()
   }
