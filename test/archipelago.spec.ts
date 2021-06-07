@@ -120,6 +120,16 @@ describe("archipelago", () => {
     expectIslandsWith(archipelago, ["1"])
   })
 
+  it("recalculates islands when options are modified", () => {
+    setPositions(["1", 0, 0, 0], ["2", 16, 0, 16])
+    expectIslandWith(archipelago, "1", "2")
+
+    archipelago.modifyOptions({ joinDistance: 4, leaveDistance: 5 })
+
+    expectIslandWith(archipelago, "1")
+    expectIslandWith(archipelago, "2")
+  })
+
   function expectChangedTo(updates: IslandUpdates, peerId: string, islandId: string) {
     expect.strictEqual(updates[peerId].islandId, islandId)
     expect.strictEqual(updates[peerId].action, "changeTo")

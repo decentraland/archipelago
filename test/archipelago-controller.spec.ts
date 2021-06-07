@@ -31,6 +31,10 @@ describe("archipelago controller", () => {
     )
   }
 
+  function clearUpdates() {
+    receivedUpdates = []
+  }
+
   function getLatestUpdateFor(peerId: string) {
     for (let i = receivedUpdates.length - 1; i >= 0; i--) {
       const update = receivedUpdates[i][peerId]
@@ -64,6 +68,28 @@ describe("archipelago controller", () => {
     expect.notStrictEqual(update1!.islandId, update3!.islandId)
 
     await expectIslandsInControllerWith(controller, ["1", "2"], ["3"])
+  })
+
+  it("should forward positions and receive updates", async () => {
+    controller.setPeersPositions(
+      { id: "1", position: [0, 0, 0] },
+      { id: "2", position: [16, 0, 16] },
+    )
+
+    await controller.flush()
+    await receivedUpdatesForPeers("1", "2")
+    expect.strictEqual(await controller.getIslandsCount(), 1)
+    expect.strictEqual(await controller.getPeersCount(), 2)
+    clearUpdates()
+
+    controller.modifyOptions({ joinDistance: 4, leaveDistance: 5 })
+
+    await receivedUpdatesForPeers("2")
+
+    expect.strictEqual(await controller.getIslandsCount(), 2)
+    expect.strictEqual(await controller.getPeersCount(), 2)
+
+    await expectIslandsInControllerWith(controller, ["1"], ["2"])
   })
 
   it("should allow to clear peers", async () => {

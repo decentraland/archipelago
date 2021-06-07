@@ -7,6 +7,7 @@ import {
   PeerData,
   PeerPositionChange,
   Position3D,
+  UpdatableArchipelagoParameters,
   UpdateSubscriber,
 } from "../types/interfaces"
 
@@ -187,6 +188,10 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
       this.pendingUpdates.set(id, { type: "clear" })
       this.activePeers.delete(id)
     }
+  }
+
+  modifyOptions(options: UpdatableArchipelagoParameters) {
+    this.workerController.sendMessageToWorker({ type: "apply-options-update", updates: options })
   }
 
   async getPeersCount(): Promise<number> {

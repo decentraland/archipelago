@@ -34,6 +34,7 @@ export interface ArchipelagoController {
   getPeersData(ids: string[]): Promise<Record<string, PeerData>>
   dispose(): Promise<void>
   flush(): Promise<void>
+  modifyOptions(options: UpdatableArchipelagoParameters): void
 }
 
 export type IslandUpdate = {
@@ -53,6 +54,8 @@ export type ArchipelagoOptions = {
 export type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance" | "leaveDistance">
 
 export type ArchipelagoParameters = MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>
+
+export type UpdatableArchipelagoParameters = Partial<Omit<ArchipelagoOptions, 'islandIdGenerator'>>
 
 export type Logger = {
   info(message?: any, ...optionalParams: any[]): void
