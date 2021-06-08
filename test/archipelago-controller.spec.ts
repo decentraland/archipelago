@@ -70,7 +70,7 @@ describe("archipelago controller", () => {
     await expectIslandsInControllerWith(controller, ["1", "2"], ["3"])
   })
 
-  it("should forward positions and receive updates", async () => {
+  it("should forward option updates and receive updates", async () => {
     controller.setPeersPositions(
       { id: "1", position: [0, 0, 0] },
       { id: "2", position: [16, 0, 16] },
