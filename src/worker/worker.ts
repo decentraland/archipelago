@@ -140,7 +140,6 @@ function applyOptionsUpdate(newOptions: UpdatableArchipelagoParameters) {
   logger.debug(`Processing options update`)
 
   const updates = archipelago.modifyOptions(newOptions)
-  console.log(updates)
   emitUpdates(updates)
 
   logger.debug(`Processing updates took: ${Date.now() - startTime}`)
