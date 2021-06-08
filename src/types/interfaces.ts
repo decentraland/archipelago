@@ -33,7 +33,7 @@ export interface ArchipelagoController {
   getPeerData(id: string): Promise<PeerData | undefined>
   getPeersData(ids: string[]): Promise<Record<string, PeerData>>
   dispose(): Promise<void>
-  flush(): Promise<void>
+  flush(): void
   modifyOptions(options: UpdatableArchipelagoParameters): void
 }
 

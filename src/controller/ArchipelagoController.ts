@@ -142,7 +142,7 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
     loop()
   }
 
-  async flush() {
+  flush() {
     if (this.pendingUpdates.size > 0 && this.workerController.workerStatus === "idle") {
       console.log(`Flushing ${this.pendingUpdates.size} updates`)
       const updatesToFlush = this.pendingUpdates
