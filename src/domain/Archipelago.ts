@@ -7,6 +7,7 @@ import {
   PeerPositionChange,
   Island,
   ArchipelagoParameters,
+  UpdatableArchipelagoParameters,
 } from "../types/interfaces"
 import { findMax, popFirstByOrder, popMax } from "../misc/utils"
 import { IArchipelago } from "./interfaces"
@@ -70,6 +71,17 @@ export class Archipelago implements IArchipelago {
 
   constructor(options: ArchipelagoParameters) {
     this.options = { ...defaultOptions(), ...options }
+  }
+
+  modifyOptions(options: UpdatableArchipelagoParameters): IslandUpdates {
+    this.options = { ...this.options, ...options }
+
+    let updates: IslandUpdates = {}
+    const allIslands = new Set(this.islands.keys())
+
+    this.updateIslands(updates, allIslands)
+
+    return updates
   }
 
   getOptions() {

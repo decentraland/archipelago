@@ -25,6 +25,8 @@ export interface ArchipelagoController {
     // (undocumented)
     getPeersData(ids: string[]): Promise<Record<string, PeerData>>;
     // (undocumented)
+    modifyOptions(options: UpdatableArchipelagoParameters): void;
+    // (undocumented)
     setPeersPositions(...requests: PeerPositionChange[]): void;
     // (undocumented)
     subscribeToUpdates(subscriber: UpdateSubscriber): void;
@@ -107,6 +109,9 @@ export type PeerPositionChange = {
 
 // @public (undocumented)
 export type Position3D = [number, number, number];
+
+// @public (undocumented)
+export type UpdatableArchipelagoParameters = Partial<Omit<ArchipelagoOptions, 'islandIdGenerator'>>;
 
 // @public (undocumented)
 export type UpdateSubscriber = (updates: IslandUpdates) => any;

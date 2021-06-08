@@ -1,9 +1,14 @@
 import { PeerPositionChange } from ".."
-import { Island, IslandUpdates, PeerData } from "./interfaces"
+import { Island, IslandUpdates, PeerData, UpdatableArchipelagoParameters } from "./interfaces"
 
 export type ApplyUpdates = {
   type: "apply-updates"
   updates: { positionUpdates: PeerPositionChange[]; clearUpdates: string[] }
+}
+
+export type ApplyOptionsUpdate = {
+  type: "apply-options-update"
+  updates: UpdatableArchipelagoParameters
 }
 
 type Request = { requestId: string }
@@ -90,6 +95,7 @@ export type WorkerStatus = "working" | "idle" | "unknown"
 
 export type WorkerMessage =
   | ApplyUpdates
+  | ApplyOptionsUpdate
   | WorkerResponse
   | WorkerRequest
   | IslandsUpdated
