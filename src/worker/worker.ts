@@ -2,7 +2,7 @@ import { WorkerOptions } from "../controller/ArchipelagoController"
 import { Archipelago } from "../domain/Archipelago"
 import { IArchipelago } from "../domain/interfaces"
 import { NullLogger } from "../misc/utils"
-import { IslandUpdates, Logger, PeerData, PeerPositionChange, UpdatableArchipelagoParameters } from "../types/interfaces"
+import { IslandUpdates, Logger, PeerData } from "../types/interfaces"
 import {
   DisposeResponse,
   GetPeerDataResponse,
@@ -28,10 +28,17 @@ let status: "idle" | "working" = "idle"
 process.on("message", (message: WorkerMessage) => {
   switch (message.type) {
     case "apply-updates":
-      applyUpdates(message.updates)
+      const { clearUpdates, positionUpdates } = message.updates
+      performArchipelagoOperation(
+        (archipelago) => ({
+          ...archipelago.clearPeers(clearUpdates),
+          ...archipelago.setPeersPositions(positionUpdates),
+        }),
+        "updates"
+      )
       break
     case "apply-options-update":
-      applyOptionsUpdate(message.updates)
+      performArchipelagoOperation((archipelago) => archipelago.modifyOptions(message.updates), "options update")
       break
     case "get-islands": {
       const response: IslandsResponse = {
@@ -108,41 +115,21 @@ function getPeersData(peerIds: string[]): Record<string, PeerData> {
 function emitUpdates(updates: IslandUpdates) {
   const updatesMessage: IslandsUpdated = {
     type: "islands-updated",
-    islandUpdates: updates
+    islandUpdates: updates,
   }
   process.send!(updatesMessage)
 }
 
-function applyUpdates({
-  positionUpdates,
-  clearUpdates,
-}: {
-  positionUpdates: PeerPositionChange[]
-  clearUpdates: string[]
-}) {
+function performArchipelagoOperation(operation: (archipelago: IArchipelago) => IslandUpdates, description: string) {
   setStatus("working")
   const startTime = Date.now()
 
-  logger.debug(`Processing ${positionUpdates.length} position updates and ${clearUpdates.length} clear updates`)
+  logger.debug(`Processing ${description}`)
 
-  const updates = { ...archipelago.clearPeers(clearUpdates), ...archipelago.setPeersPositions(positionUpdates) }
+  const updates = operation(archipelago)
   emitUpdates(updates)
 
-  logger.debug(`Processing updates took: ${Date.now() - startTime}`)
-
-  setStatus("idle")
-}
-
-function applyOptionsUpdate(newOptions: UpdatableArchipelagoParameters) {
-  setStatus("working")
-  const startTime = Date.now()
-
-  logger.debug(`Processing options update`)
-
-  const updates = archipelago.modifyOptions(newOptions)
-  emitUpdates(updates)
-
-  logger.debug(`Processing updates took: ${Date.now() - startTime}`)
+  logger.debug(`Processing ${description} took: ${Date.now() - startTime}`)
 
   setStatus("idle")
 }
