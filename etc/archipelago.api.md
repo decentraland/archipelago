@@ -11,7 +11,7 @@ export interface ArchipelagoController {
     // (undocumented)
     dispose(): Promise<void>;
     // (undocumented)
-    flush(): Promise<void>;
+    flush(): void;
     // (undocumented)
     getIsland(id: string): Promise<Island | undefined>;
     // (undocumented)
@@ -24,6 +24,8 @@ export interface ArchipelagoController {
     getPeersCount(): Promise<number>;
     // (undocumented)
     getPeersData(ids: string[]): Promise<Record<string, PeerData>>;
+    // (undocumented)
+    modifyOptions(options: UpdatableArchipelagoParameters): void;
     // (undocumented)
     setPeersPositions(...requests: PeerPositionChange[]): void;
     // (undocumented)
@@ -117,6 +119,9 @@ export type PeerPositionChange = {
 
 // @public (undocumented)
 export type Position3D = [number, number, number];
+
+// @public (undocumented)
+export type UpdatableArchipelagoParameters = Partial<Omit<ArchipelagoOptions, 'islandIdGenerator'>>;
 
 // @public (undocumented)
 export type UpdateSubscriber = (updates: IslandUpdates) => any;

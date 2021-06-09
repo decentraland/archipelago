@@ -7,6 +7,7 @@ import {
   PeerData,
   PeerPositionChange,
   Position3D,
+  UpdatableArchipelagoParameters,
   UpdateSubscriber,
 } from "../types/interfaces"
 
@@ -141,7 +142,7 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
     loop()
   }
 
-  async flush() {
+  flush() {
     if (this.pendingUpdates.size > 0 && this.workerController.workerStatus === "idle") {
       console.log(`Flushing ${this.pendingUpdates.size} updates`)
       const updatesToFlush = this.pendingUpdates
@@ -187,6 +188,10 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
       this.pendingUpdates.set(id, { type: "clear" })
       this.activePeers.delete(id)
     }
+  }
+
+  modifyOptions(options: UpdatableArchipelagoParameters) {
+    this.workerController.sendMessageToWorker({ type: "apply-options-update", updates: options })
   }
 
   async getPeersCount(): Promise<number> {
