@@ -1,9 +1,9 @@
-import { Archipelago} from "../src/domain/Archipelago"
+import { Archipelago } from "../src/domain/Archipelago"
 
 import expect from "assert"
 import { expectIslandsWith, expectIslandWith, setMultiplePeersAround } from "./lib"
 import { sequentialIdGenerator } from "../src/misc/idGenerator"
-import { IslandUpdates } from "../src"
+import { ChangeToIslandUpdate, IslandUpdates } from "../src"
 
 type PositionWithId = [string, number, number, number]
 
@@ -120,9 +120,12 @@ describe("archipelago", () => {
     expectIslandsWith(archipelago, ["1"])
   })
 
-  function expectChangedTo(updates: IslandUpdates, peerId: string, islandId: string) {
+  function expectChangedTo(updates: IslandUpdates, peerId: string, islandId: string, fromIslandId?: string) {
     expect.strictEqual(updates[peerId].islandId, islandId)
     expect.strictEqual(updates[peerId].action, "changeTo")
+    if (fromIslandId) {
+      expect.strictEqual((updates[peerId] as ChangeToIslandUpdate).fromIslandId, fromIslandId)
+    }
   }
 
   function expectLeft(updates: IslandUpdates, peerId: string, islandId: string) {
@@ -150,7 +153,7 @@ describe("archipelago", () => {
 
     updates = archipelago.setPeersPositions([{ id: "3", position: [50, 0, 0] }])
 
-    expectChangedTo(updates, "2", "I1")
+    expectChangedTo(updates, "2", "I1", "I3")
     expectChangedTo(updates, "3", "I1")
     expectNoUpdate(updates, "1")
     expectNoUpdate(updates, "0")
@@ -164,7 +167,7 @@ describe("archipelago", () => {
     const updates = archipelago.clearPeers(["2"])
 
     expectLeft(updates, "2", "I1")
-    expectChangedTo(updates, "3", "I4")
+    expectChangedTo(updates, "3", "I4", "I1")
     expectNoUpdate(updates, "1")
   })
 
