@@ -37,10 +37,18 @@ export interface ArchipelagoController {
   modifyOptions(options: UpdatableArchipelagoParameters): void
 }
 
-export type IslandUpdate = {
-  action: "leave" | "changeTo"
+export type ChangeToIslandUpdate = {
+  action: "changeTo"
+  islandId: string
+  fromIslandId?: string
+}
+
+export type LeaveIslandUpdate = {
+  action: "leave"
   islandId: string
 }
+
+export type IslandUpdate = ChangeToIslandUpdate | LeaveIslandUpdate
 
 export type IslandUpdates = Record<string, IslandUpdate>
 

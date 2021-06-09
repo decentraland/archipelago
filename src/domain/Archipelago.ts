@@ -324,8 +324,9 @@ export class Archipelago implements IArchipelago {
 
   private setPeersIsland(islandId: string, peers: PeerData[], updates: IslandUpdates): IslandUpdates {
     for (const peer of peers) {
+      const previousIslandId = peer.islandId
       peer.islandId = islandId
-      updates[peer.id] = { action: "changeTo", islandId }
+      updates[peer.id] = { action: "changeTo", islandId, fromIslandId: previousIslandId }
     }
 
     return updates

@@ -54,7 +54,7 @@ export function setMultiplePeersAround(
   position: Position3D,
   qty: number,
   idGenerator: IdGenerator = sequentialIdGenerator("P"),
-  offset: Position3D = [20, 0, 20]
+  offset: Position3D = [10, 0, 10]
 ) {
   const randomizer = createRandomizer()
   const requests: PeerPositionChange[] = []

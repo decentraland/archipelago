@@ -11,7 +11,7 @@ export interface ArchipelagoController {
     // (undocumented)
     dispose(): Promise<void>;
     // (undocumented)
-    flush(): Promise<void>;
+    flush(): void;
     // (undocumented)
     getIsland(id: string): Promise<Island | undefined>;
     // (undocumented)
@@ -54,6 +54,13 @@ export type ArchipelagoOptions = {
 export type ArchipelagoParameters = MandatoryArchipelagoOptions & Partial<ArchipelagoOptions>;
 
 // @public (undocumented)
+export type ChangeToIslandUpdate = {
+    action: "changeTo";
+    islandId: string;
+    fromIslandId?: string;
+};
+
+// @public (undocumented)
 export function defaultArchipelagoController(options: ArchipelagoControllerOptions): ArchipelagoController;
 
 // @public (undocumented)
@@ -73,13 +80,16 @@ export type Island = {
 };
 
 // @public (undocumented)
-export type IslandUpdate = {
-    action: "leave" | "changeTo";
-    islandId: string;
-};
+export type IslandUpdate = ChangeToIslandUpdate | LeaveIslandUpdate;
 
 // @public (undocumented)
 export type IslandUpdates = Record<string, IslandUpdate>;
+
+// @public (undocumented)
+export type LeaveIslandUpdate = {
+    action: "leave";
+    islandId: string;
+};
 
 // @public (undocumented)
 export type Logger = {
