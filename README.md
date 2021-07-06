@@ -35,7 +35,7 @@ archipelago.clearPeers(SOME_PEER_ID, OTHER_PEER_ID)
 
 ## Interfaces
 
-See [src/interfaces.ts](src/interfaces.ts)
+See [src/types/interfaces.ts](src/types/interfaces.ts)
 
 ## Commands
 
