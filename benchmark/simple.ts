@@ -30,6 +30,7 @@ const peerIdGenerator = sequentialIdGenerator("Peer")
 
 const archipelagoController: ArchipelagoController = new ArchipelagoControllerImpl({
   archipelagoParameters: { joinDistance: 64, leaveDistance: 80, maxPeersPerIsland: MAX_PEERS_PER_ISLAND },
+  workerSrcPath: 'dist/worker/worker.js'
 })
 
 console.log("Using seed " + SEED)
