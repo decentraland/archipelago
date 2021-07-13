@@ -97,7 +97,7 @@ export class Archipelago implements IArchipelago {
     for (const change of changes) {
       const { id, position, preferedIslandId } = change
       if (!this.peers.has(id)) {
-        this.peers.set(id, { id, position, preferedIslandId })
+        this.peers.set(id, change)
         this.createIsland([this.peers.get(id)!], updates, affectedIslands)
       } else {
         const peer = this.peers.get(id)!
