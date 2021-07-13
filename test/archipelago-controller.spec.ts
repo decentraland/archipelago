@@ -163,4 +163,14 @@ describe("archipelago controller", () => {
     expect.strictEqual(peersData["1"].islandId, getLatestUpdateFor("1")!.islandId)
     expect.strictEqual(peersData["2"].islandId, getLatestUpdateFor("2")!.islandId)
   })
+
+  it("should allow to set preferred island through controller", async () => {
+    controller.setPeersPositions({ id: "1", position: [0, 0, 0], preferedIslandId: "I99" })
+
+    await receivedUpdatesForPeers("1")
+
+    const peerData = await controller.getPeerData("1")
+
+    expect.strictEqual(peerData?.preferedIslandId, "I99")
+  })
 })

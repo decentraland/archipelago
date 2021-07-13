@@ -5,6 +5,7 @@ export type Position3D = [number, number, number]
 export type PeerData = {
   id: string
   position: Position3D
+  preferedIslandId?: string
   islandId?: string
 }
 
@@ -17,7 +18,7 @@ export type Island = {
   sequenceId: number
 }
 
-export type PeerPositionChange = { id: string; position: Position3D }
+export type PeerPositionChange = { id: string; position: Position3D; preferedIslandId?: string }
 
 export type UpdateSubscriber = (updates: IslandUpdates) => any
 
