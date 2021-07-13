@@ -23,7 +23,7 @@ import {
 } from "../types/messageTypes"
 import { IdGenerator, sequentialIdGenerator } from "../misc/idGenerator"
 
-type SetPositionUpdate = { type: "set-position"; position: Position3D }
+type SetPositionUpdate = { type: "set-position" } & PeerPositionChange
 type ClearUpdate = { type: "clear" }
 
 type PeerUpdate = SetPositionUpdate | ClearUpdate
@@ -153,7 +153,8 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
 
       for (const [id, update] of updatesToFlush) {
         if (update.type === "set-position") {
-          positionUpdates.push({ id, position: update.position })
+          const { type, ...rest } = update
+          positionUpdates.push({ ...rest, id })
         } else {
           clearUpdates.push(id)
         }
@@ -169,7 +170,7 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
         this.activePeers.add(req.id)
       }
 
-      this.pendingUpdates.set(req.id, { type: "set-position", position: req.position })
+      this.pendingUpdates.set(req.id, { type: "set-position", ...req })
     }
   }
 

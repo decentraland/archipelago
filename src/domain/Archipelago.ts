@@ -94,13 +94,21 @@ export class Archipelago implements IArchipelago {
   setPeersPositions(changes: PeerPositionChange[]): IslandUpdates {
     let updates: IslandUpdates = {}
     const affectedIslands: Set<string> = new Set()
-    for (const { id, position } of changes) {
+    for (const change of changes) {
+      const { id, position, preferedIslandId } = change
       if (!this.peers.has(id)) {
-        this.peers.set(id, { id, position })
+        this.peers.set(id, { id, position, preferedIslandId })
         this.createIsland([this.peers.get(id)!], updates, affectedIslands)
       } else {
         const peer = this.peers.get(id)!
         peer.position = position
+
+        // We can set the prefered island to undefined by explicitly providing the key but no value.
+        // If we don't provide the key, we leave it as it is today
+        if("preferedIslandId" in change) {
+          peer.preferedIslandId = preferedIslandId
+        }
+        
         if (peer.islandId) {
           const island = this.getIsland(peer.islandId)!
           this.markGeometryDirty(island)
@@ -220,7 +228,28 @@ export class Archipelago implements IArchipelago {
     }
   }
 
+  private mergeIntoIfPossible(updates: IslandUpdates, islandToMergeInto: InternalIsland, anIsland: Island) {
+    function canMerge(islandToMergeInto: Island, anIsland: Island) {
+      return islandToMergeInto.peers.length + anIsland.peers.length <= islandToMergeInto.maxPeers
+    }
+
+    if(canMerge(islandToMergeInto, anIsland)) {
+      updates = this.addPeersToIsland(islandToMergeInto, anIsland.peers, updates)
+
+      this.islands.delete(anIsland.id)
+
+      this.markGeometryDirty(islandToMergeInto)
+
+      return true
+    } else {
+      return false
+    }
+  }
+
   private mergeIslands(updates: IslandUpdates, ...islands: InternalIsland[]): IslandUpdates {
+
+
+
     if (islands.length < 1) return updates
 
     const sortedIslands = islands.sort((i1, i2) =>
@@ -236,17 +265,18 @@ export class Archipelago implements IArchipelago {
     while ((anIsland = sortedIslands.shift())) {
       let merged = false
 
-      for (let i = 0; i < biggestIslands.length; i++) {
-        if (biggestIslands[i].peers.length + anIsland.peers.length <= biggestIslands[i].maxPeers) {
-          updates = this.addPeersToIsland(biggestIslands[i], anIsland.peers, updates)
+      const preferedIslandId = this.getPreferedIslandFor(anIsland)
 
-          this.islands.delete(anIsland.id)
+      // We only support prefered islands for islands bigger and/or older than the one we are currently processing.
+      // It would be very unlikely that there is a valid use case for the other possibilities
+      const preferedIsland = preferedIslandId ? biggestIslands.find(it => it.id === preferedIslandId) : undefined
 
-          this.markGeometryDirty(biggestIslands[i])
+      if(preferedIsland) {
+        merged = this.mergeIntoIfPossible(updates, preferedIsland, anIsland)
+      }
 
-          merged = true
-          break
-        }
+      for (let i = 0; !merged && i < biggestIslands.length; i++) {
+        merged = this.mergeIntoIfPossible(updates, biggestIslands[i], anIsland)
       }
 
       if (!merged) {
@@ -255,6 +285,23 @@ export class Archipelago implements IArchipelago {
     }
 
     return updates
+  }
+
+  private getPreferedIslandFor(anIsland: Island) {
+    const votes: Record<string, number> = {}
+    let mostVoted: string | undefined
+
+    for (const peer of anIsland.peers) {
+      if (peer.preferedIslandId) {
+        votes[peer.preferedIslandId] = peer.preferedIslandId in votes ? votes[peer.preferedIslandId] + 1 : 1
+
+        if (!mostVoted || votes[mostVoted] < votes[peer.preferedIslandId]) {
+          mostVoted = peer.preferedIslandId
+        }
+      }
+    }
+
+    return mostVoted
   }
 
   private intersectIslands(anIsland: InternalIsland, otherIsland: InternalIsland, intersectDistance: number) {

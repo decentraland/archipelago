@@ -108,6 +108,7 @@ export type MandatoryArchipelagoOptions = Pick<ArchipelagoOptions, "joinDistance
 export type PeerData = {
     id: string;
     position: Position3D;
+    preferedIslandId?: string;
     islandId?: string;
 };
 
@@ -115,6 +116,7 @@ export type PeerData = {
 export type PeerPositionChange = {
     id: string;
     position: Position3D;
+    preferedIslandId?: string;
 };
 
 // @public (undocumented)
