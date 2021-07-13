@@ -104,7 +104,7 @@ export class Archipelago implements IArchipelago {
         peer.position = position
 
         // We can set the prefered island to undefined by explicitly providing the key but no value.
-        // If we don't provide the key, we leave it as it is today
+        // If we don't provide the key, we leave it as it is
         if("preferedIslandId" in change) {
           peer.preferedIslandId = preferedIslandId
         }
