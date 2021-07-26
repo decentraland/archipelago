@@ -53,7 +53,7 @@ describe("archipelago controller", () => {
       { id: "3", position: [90, 0, 90] }
     )
 
-    await controller.flush()
+    controller.flush()
 
     await receivedUpdatesForPeers("1", "2", "3")
 
@@ -76,7 +76,7 @@ describe("archipelago controller", () => {
       { id: "2", position: [16, 0, 16] },
     )
 
-    await controller.flush()
+    controller.flush()
     await receivedUpdatesForPeers("1", "2")
     expect.strictEqual(await controller.getIslandsCount(), 1)
     expect.strictEqual(await controller.getPeersCount(), 2)
@@ -95,7 +95,7 @@ describe("archipelago controller", () => {
   it("should allow to clear peers", async () => {
     controller.setPeersPositions({ id: "1", position: [0, 0, 0] }, { id: "2", position: [4, 0, 4] })
 
-    await controller.flush()
+    controller.flush()
 
     await receivedUpdatesForPeers("1", "2")
 
@@ -105,7 +105,7 @@ describe("archipelago controller", () => {
 
     controller.clearPeers("1")
 
-    await controller.flush()
+    controller.flush()
 
     await receivedUpdatesForPeers("1")
     const update = getLatestUpdateFor("1")
@@ -172,5 +172,21 @@ describe("archipelago controller", () => {
     const peerData = await controller.getPeerData("1")
 
     expect.strictEqual(peerData?.preferedIslandId, "I99")
+  })
+
+  it("should allow to get island information through controller", async () => {
+    controller.setPeersPositions({ id: "1", position: [0, 0, 0] })
+
+    controller.flush()
+
+    await receivedUpdatesForPeers("1")
+
+    const islandId = (await controller.getPeerData("1"))?.islandId!
+
+    const island = await controller.getIsland(islandId)
+
+    expect.strictEqual(island?.id, islandId)
+    expect.strictEqual(island.peers.length, 1)
+    expect.strictEqual(island.peers[0].id, "1")
   })
 })
