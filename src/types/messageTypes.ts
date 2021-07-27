@@ -91,6 +91,15 @@ export type GetPeersDataResponse = {
   payload: Record<string, PeerData>
 } & Response
 
+export type GetPeerIds = {
+  type: "get-peer-ids"
+} & Request
+
+export type GetPeerIdsResponse = {
+  type: "get-peer-ids-response"
+  payload: string[]
+} & Response
+
 export type WorkerStatus = "working" | "idle" | "unknown"
 
 export type WorkerMessage =
@@ -103,6 +112,7 @@ export type WorkerMessage =
   | WorkerRequestError
   | GetPeerData
   | GetPeersData
+  | GetPeerIds
 
-export type WorkerResponse = IslandsCountResponse | IslandsResponse | DisposeResponse | GetPeerDataResponse | GetPeersDataResponse
-export type WorkerRequest = GetIslands | GetIslandsCount | GetIsland | DisposeRequest | GetPeerData | GetPeersData
+export type WorkerResponse = IslandsCountResponse | IslandsResponse | DisposeResponse | GetPeerDataResponse | GetPeersDataResponse | GetPeerIdsResponse
+export type WorkerRequest = GetIslands | GetIslandsCount | GetIsland | DisposeRequest | GetPeerData | GetPeersData | GetPeerIds

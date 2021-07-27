@@ -28,6 +28,7 @@ export interface ArchipelagoController {
   getIsland(id: string): Promise<Island | undefined>
   clearPeers(...ids: string[]): void
   getPeersCount(): Promise<number>
+  getPeerIds(): Promise<string[]>
   getIslandsCount(): Promise<number>
   subscribeToUpdates(subscriber: UpdateSubscriber): void
   unsubscribeFromUpdates(subscriber: UpdateSubscriber): void

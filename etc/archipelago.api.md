@@ -21,6 +21,8 @@ export interface ArchipelagoController {
     // (undocumented)
     getPeerData(id: string): Promise<PeerData | undefined>;
     // (undocumented)
+    getPeerIds(): Promise<string[]>;
+    // (undocumented)
     getPeersCount(): Promise<number>;
     // (undocumented)
     getPeersData(ids: string[]): Promise<Record<string, PeerData>>;

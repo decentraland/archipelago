@@ -6,6 +6,7 @@ import { IslandUpdates, Logger, PeerData } from "../types/interfaces"
 import {
   DisposeResponse,
   GetPeerDataResponse,
+  GetPeerIdsResponse,
   GetPeersDataResponse,
   IslandResponse,
   IslandsCountResponse,
@@ -93,6 +94,15 @@ process.on("message", (message: WorkerMessage) => {
         type: "dispose-response",
         requestId: message.requestId,
         payload: null,
+      }
+      process.send!(response)
+      break
+    }
+    case "get-peer-ids": {
+      const response: GetPeerIdsResponse = {
+        type: "get-peer-ids-response",
+        requestId: message.requestId,
+        payload: archipelago.getPeerIds()
       }
       process.send!(response)
       break

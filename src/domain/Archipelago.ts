@@ -105,10 +105,10 @@ export class Archipelago implements IArchipelago {
 
         // We can set the prefered island to undefined by explicitly providing the key but no value.
         // If we don't provide the key, we leave it as it is
-        if("preferedIslandId" in change) {
+        if ("preferedIslandId" in change) {
           peer.preferedIslandId = preferedIslandId
         }
-        
+
         if (peer.islandId) {
           const island = this.getIsland(peer.islandId)!
           this.markGeometryDirty(island)
@@ -233,7 +233,7 @@ export class Archipelago implements IArchipelago {
       return islandToMergeInto.peers.length + anIsland.peers.length <= islandToMergeInto.maxPeers
     }
 
-    if(canMerge(islandToMergeInto, anIsland)) {
+    if (canMerge(islandToMergeInto, anIsland)) {
       updates = this.addPeersToIsland(islandToMergeInto, anIsland.peers, updates)
 
       this.islands.delete(anIsland.id)
@@ -271,7 +271,7 @@ export class Archipelago implements IArchipelago {
       // It would be very unlikely that there is a valid use case for the other possibilities
       const preferedIsland = preferedIslandId ? biggestIslands.find(it => it.id === preferedIslandId) : undefined
 
-      if(preferedIsland) {
+      if (preferedIsland) {
         merged = this.mergeIntoIfPossible(updates, preferedIsland, anIsland)
       }
 
@@ -393,5 +393,9 @@ export class Archipelago implements IArchipelago {
 
   getIslandsCount(): number {
     return this.islands.size
+  }
+
+  getPeerIds(): string[] {
+    return [...this.peers.keys()]
   }
 }

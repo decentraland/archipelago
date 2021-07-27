@@ -189,4 +189,17 @@ describe("archipelago controller", () => {
     expect.strictEqual(island.peers.length, 1)
     expect.strictEqual(island.peers[0].id, "1")
   })
+
+  it("should allow to get peer ids", async () => {
+
+    controller.setPeersPositions({ id: "1", position: [0, 0, 0] }, { id: "2", position: [0, 0, 0] })
+
+    controller.flush()
+
+    await receivedUpdatesForPeers("1", "2")
+
+    const peerIds = await controller.getPeerIds()
+
+    expect.deepStrictEqual(peerIds.sort(), ["1", "2"])
+  })
 })

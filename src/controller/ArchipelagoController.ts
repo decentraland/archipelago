@@ -15,6 +15,7 @@ import { fork, ChildProcess } from "child_process"
 import {
   GetIsland,
   GetPeerData,
+  GetPeerIds,
   GetPeersData,
   WorkerMessage,
   WorkerRequest,
@@ -233,6 +234,12 @@ export class ArchipelagoControllerImpl implements ArchipelagoController {
 
   async getPeersData(ids: string[]): Promise<Record<string, PeerData>> {
     const request: Omit<GetPeersData, "requestId"> = { type: "get-peers-data", peerIds: ids }
+    return this.workerController.sendRequestToWorker(request)
+  }
+
+  async getPeerIds(): Promise<string[]> {
+    const request: Omit<GetPeerIds, "requestId"> = { type: "get-peer-ids" }
+
     return this.workerController.sendRequestToWorker(request)
   }
 }
